@@ -724,7 +724,7 @@ namespace FileToImage
                 chr3 = input.GetChar(i++);
                 enc1 = chr1 >> 2;
                 enc2 = ((chr1 & 3) << 4) | (chr2.OR(0) >> 4);
-                enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+                enc3 = ((chr2 & 15) << 2) | (chr3.OR(0) >> 6);
                 enc4 = chr3 & 63;
                 if (chr2==null)
                 {
