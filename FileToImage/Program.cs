@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
+using System.Drawing;
 
 namespace FileToImage
 {
@@ -240,6 +241,11 @@ namespace FileToImage
             return str.ToString();
         }
 
+        /// <summary>
+        /// 读取文件后直接进行base64编码
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
         public static string Base64EncodeFile(string fileName)
         {
             StringBuilder str = new StringBuilder();
@@ -379,6 +385,41 @@ namespace FileToImage
             //Marshal.Copy(ptr, value, 0, count);
             //将已经处理好的数据直接通过内存操作放置到需要的位置
             Marshal.Copy(ret, 0, ptr, count);
+        }
+
+        public static ImageCodecInfo GetImageCoder(ImageFormat format)
+        {
+            ImageCodecInfo[] codecs = ImageCodecInfo.GetImageDecoders();
+            foreach (var codec in codecs)
+            {
+                if (codec.FormatID == format.Guid)
+                {
+                    return codec;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 将图片转为jpg并保存
+        /// </summary>
+        /// <param name="image"></param>
+        /// <param name="path"></param>
+        public static void BmpToJpgSave(Bitmap image,string path)
+        {
+            using (var esp = new EncoderParameters(1))
+            {
+                using (var ep = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 85L))
+                {
+                    esp.Param[0] = ep;
+                    var jpsEncoder = GetImageCoder(ImageFormat.Jpeg);
+                    //保存图片为jpg
+                    //image.Save(path, jpsEncoder, esp);
+                    image.Save(path);
+                    //释放资源
+                    //image.Dispose();
+                }
+            } 
         }
     }
 
