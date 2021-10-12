@@ -50,6 +50,7 @@
             this.button1 = new System.Windows.Forms.Button();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.button7 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -99,6 +100,7 @@
             this.pictureBox1.Location = new System.Drawing.Point(19, 32);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(467, 479);
+            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
             // 
@@ -115,25 +117,26 @@
             // 
             this.groupBox4.Controls.Add(this.button5);
             this.groupBox4.Controls.Add(this.button6);
-            this.groupBox4.Location = new System.Drawing.Point(12, 379);
+            this.groupBox4.Location = new System.Drawing.Point(12, 422);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(140, 138);
+            this.groupBox4.Size = new System.Drawing.Size(140, 95);
             this.groupBox4.TabIndex = 4;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "导出";
             // 
             // button5
             // 
-            this.button5.Location = new System.Drawing.Point(21, 72);
+            this.button5.Location = new System.Drawing.Point(21, 52);
             this.button5.Name = "button5";
             this.button5.Size = new System.Drawing.Size(98, 26);
             this.button5.TabIndex = 3;
             this.button5.Text = "图片解码";
             this.button5.UseVisualStyleBackColor = true;
+            this.button5.Click += new System.EventHandler(this.button5_Click);
             // 
             // button6
             // 
-            this.button6.Location = new System.Drawing.Point(21, 30);
+            this.button6.Location = new System.Drawing.Point(21, 20);
             this.button6.Name = "button6";
             this.button6.Size = new System.Drawing.Size(98, 26);
             this.button6.TabIndex = 2;
@@ -145,7 +148,7 @@
             // 
             this.groupBox3.Controls.Add(this.button3);
             this.groupBox3.Controls.Add(this.button4);
-            this.groupBox3.Location = new System.Drawing.Point(12, 279);
+            this.groupBox3.Location = new System.Drawing.Point(12, 322);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(140, 94);
             this.groupBox3.TabIndex = 3;
@@ -160,6 +163,7 @@
             this.button3.TabIndex = 3;
             this.button3.Text = "导入图片预览";
             this.button3.UseVisualStyleBackColor = true;
+            this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
             // button4
             // 
@@ -173,13 +177,14 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.button7);
             this.groupBox2.Controls.Add(this.textBox1);
             this.groupBox2.Controls.Add(this.label3);
             this.groupBox2.Controls.Add(this.label2);
             this.groupBox2.Controls.Add(this.comboBox1);
             this.groupBox2.Location = new System.Drawing.Point(12, 130);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(140, 143);
+            this.groupBox2.Size = new System.Drawing.Size(140, 186);
             this.groupBox2.TabIndex = 2;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "加密解密";
@@ -267,6 +272,16 @@
             this.checkBox1.UseVisualStyleBackColor = true;
             this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
             // 
+            // button7
+            // 
+            this.button7.Location = new System.Drawing.Point(21, 136);
+            this.button7.Name = "button7";
+            this.button7.Size = new System.Drawing.Size(98, 26);
+            this.button7.TabIndex = 5;
+            this.button7.Text = "测试密码";
+            this.button7.UseVisualStyleBackColor = true;
+            this.button7.Visible = false;
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -315,6 +330,7 @@
         private System.Windows.Forms.Button button6;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.GroupBox groupBox5;
+        private System.Windows.Forms.Button button7;
     }
 }
 

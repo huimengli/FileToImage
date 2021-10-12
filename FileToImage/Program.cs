@@ -125,6 +125,15 @@ namespace FileToImage
     static class Item
     {
         /// <summary>
+        /// 打开网站|其他东西
+        /// </summary>
+        /// <param name="web">网址|地址</param>
+        public static void OpenOnWindows(string web)
+        {
+            System.Diagnostics.Process.Start(web);
+        }
+
+        /// <summary>
         /// base64加密
         /// </summary>
         /// <param name="input"></param>
@@ -175,6 +184,24 @@ namespace FileToImage
         {
             var bytes = Encoding.UTF8.GetBytes(data);
             var hash = MD5CryptoServiceProvider.Create().ComputeHash(bytes);
+
+            var builder = new StringBuilder();
+            for (int i = 0; i < hash.Length; i++)
+            {
+                builder.Append(hash[i].ToString("x2"));
+            }
+
+            return builder.ToString();
+        }
+
+        /// <summary>
+        /// MD5签名
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static string MD5(byte[] data)
+        {
+            var hash = MD5CryptoServiceProvider.Create().ComputeHash(data);
 
             var builder = new StringBuilder();
             for (int i = 0; i < hash.Length; i++)
@@ -303,14 +330,14 @@ namespace FileToImage
         /// 让用户选择文件
         /// </summary>
         /// <returns></returns>
-        public static FileInfo GetFile()
+        public static string GetFile()
         {
             var dialog = new OpenFileDialog();
             if (dialog.ShowDialog()==DialogResult.OK)
             {
                 if (!string.IsNullOrEmpty(dialog.FileName))
                 {
-                    return new FileInfo(dialog.FileName);
+                    return dialog.FileName;
                 }
             }
             return null;
@@ -321,7 +348,7 @@ namespace FileToImage
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static FileInfo GetFile(string type)
+        public static string GetFile(string type)
         {
             var dialog = new OpenFileDialog();
             switch (type)
@@ -341,7 +368,7 @@ namespace FileToImage
             {
                 if (!string.IsNullOrEmpty(dialog.FileName))
                 {
-                    return new FileInfo(dialog.FileName);
+                    return dialog.FileName;
                 }
             }
             return null;
@@ -407,19 +434,143 @@ namespace FileToImage
         /// <param name="path"></param>
         public static void BmpToJpgSave(Bitmap image,string path)
         {
-            using (var esp = new EncoderParameters(1))
+            if (File.Exists(path))
             {
-                using (var ep = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 85L))
+                MessageBox.Show("文件: " + path + " 已经存在!", "错误!", MessageBoxButtons.OK);
+            }
+            else
+            {
+                using (var esp = new EncoderParameters(1))
                 {
-                    esp.Param[0] = ep;
-                    var jpsEncoder = GetImageCoder(ImageFormat.Jpeg);
-                    //保存图片为jpg
-                    //image.Save(path, jpsEncoder, esp);
-                    image.Save(path);
-                    //释放资源
-                    //image.Dispose();
+                    using (var ep = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 85L))
+                    {
+                        esp.Param[0] = ep;
+                        var jpsEncoder = GetImageCoder(ImageFormat.Jpeg);
+                        //保存图片为jpg
+                        //image.Save(path, jpsEncoder, esp);
+                        image.Save(path);
+                        //释放资源
+                        //image.Dispose();
+                    }
                 }
-            } 
+            }
+        }
+
+        /// <summary>
+        /// 读取文件
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        public static string ReadFile(FileInfo file)
+        {
+            using (var stream = file.OpenRead())
+            {
+                var i = 0;
+                var temp = "";
+                var num = 0;//已经读取长度
+                var left = stream.Length;
+                var maxLength = 1002;//每次读取的最大长度
+                var allValue = new StringBuilder();
+                //var check = new StringBuilder();
+
+                while (left > 0)
+                {
+                    var buffer = new byte[maxLength];//缓存读取结果
+                    var cbuffer = new char[maxLength];
+                    stream.Position = i;
+                    num = 0;
+                    if (left < maxLength)
+                    {
+                        num = stream.Read(buffer, 0, Convert.ToInt32(left));
+                    }
+                    else
+                    {
+                        num = stream.Read(buffer, 0, maxLength);
+                    }
+                    if (num == 0)
+                    {
+                        break;
+                    }
+                    i += num;
+                    if (left < maxLength)
+                    {
+                        temp = ByteToString(buffer.Take((int)left).ToArray());
+                    }
+                    else
+                    {
+                        temp = ByteToString(buffer);
+                    }
+                    var test = StringToByte(temp);
+                    left -= num;
+                    allValue.Append(temp);
+                }
+                return allValue.ToString();
+            }
+        }
+
+        /// <summary>
+        /// 将字节转为字符串
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static string ByteToString(byte[] bytes)
+        {
+            return ByteToString(bytes, 0, bytes.Length);
+        }
+
+        /// <summary>
+        /// 将字节转为字符串
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <param name="start"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public static string ByteToString(byte[] bytes,int start,int count)
+        {
+            var ret = new StringBuilder();
+            for (int i = start; i < count; i++)
+            {
+                ret.Append((char)bytes[i]);
+            }
+            Console.WriteLine(bytes.Length);
+            return ret.ToString();
+        }
+
+        /// <summary>
+        /// 将字符串转为字节流
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static byte[] StringToByte(string str)
+        {
+            return StringToByte(str, 0, str.Length);
+        }
+
+        /// <summary>
+        /// 将字符串转为字节流
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="start"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public static byte[] StringToByte(string str,int start,int count)
+        {
+            var ret = new byte[str.Length];
+            var temp = 0;
+            for (int i = start; i < count; i++)
+            {
+                temp = (int)str[i];
+                if (temp > 255)
+                {
+                    throw new Exception("错误内容!\n转码的内容值超过255!");
+                }
+                else
+                {
+                    ret[i] = (byte)temp;
+                }
+            }
+            Console.WriteLine(ret.Length);
+            return ret;
         }
     }
 
@@ -1046,6 +1197,38 @@ namespace FileToImage
         {
             return list.GetRandomOne<T>(false);
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="mode"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static CodingMode Pause(this CodingMode mode,string value)
+        {
+            switch (value)
+            {
+                case "无":
+                    return CodingMode.NoCoding;
+                default:
+                    return (CodingMode)Enum.Parse(typeof(CodingMode), value);
+            }
+        }
+
+        public static string GetValue(this CodingMode mode)
+        {
+            switch (mode)
+            {
+                case CodingMode.NoCoding:
+                    return "无";
+                case CodingMode.SHA256:
+                    return "SHA256";
+                case CodingMode.MD5:
+                    return "MD5";
+                default:
+                    throw new Exception("没有这个参数!");
+            }
+        }
     }
 
     /// <summary>
@@ -1070,6 +1253,50 @@ namespace FileToImage
             else
             {
                 return ts[index];
+            }
+        }
+
+        /// <summary>
+        /// 将字符串转为字典
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static Dictionary<string,string> ToDict(this string str)
+        {
+            var temp = str.Split(';');
+            var ret = new Dictionary<string, string>();
+            foreach (var item in temp)
+            {
+                var x = item.Split(':');
+                ret.Add(x[0], x[1]);
+            }
+            return ret;
+        }
+
+        /// <summary>
+        /// 将字典转为字符串
+        /// </summary>
+        /// <param name="dict"></param>
+        /// <returns></returns>
+        public static string ToString(this Dictionary<string,string> dict,bool tf)
+        {
+            if (tf)
+            {
+                var ret = new StringBuilder();
+                foreach (var item in dict)
+                {
+                    ret.Append(item.Key);
+                    ret.Append(":");
+                    ret.Append(item.Value);
+                    ret.Append(";");
+                }
+                return ret.ToString(0, ret.Length - 1);
+            }
+            else
+            {
+                return dict.ToString();
             }
         }
     }
