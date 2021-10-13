@@ -843,7 +843,7 @@ namespace FileToImage
         /// <returns></returns>
         public static string _utf8_encode(string input)
         {
-            input = input.Replace("\r\n", "\n");
+            //input = input.Replace("\r\n", "\n");
             var ret = new StringBuilder();
             for (int i = 0; i < input.Length; i++)
             {

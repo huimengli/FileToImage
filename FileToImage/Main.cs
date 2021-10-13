@@ -230,7 +230,6 @@ namespace FileToImage
                 bmp.PixelFormat);
             //指针
             var ptr = data.Scan0;
-            byte[] rgbValues = new byte[side * side * 4];
 
             Item.Base64ToBitmapData(ref data, temp);
             bmp.UnlockBits(data);
