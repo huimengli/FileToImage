@@ -270,7 +270,7 @@ namespace FileToImage.Project
             GC.Collect();
         }
 
-        public static void Base64ToBitmapData(ref BitmapData data,byte[] base64Value)
+        public static void Base64ToBitmapData(ref BitmapData data, byte[] base64Value)
         {
             var count = (int)Math.Ceiling(base64Value.Length / 3d);
             var temp = new byte[data.Stride * data.Height];
@@ -483,9 +483,9 @@ namespace FileToImage.Project
         /// </summary>
         /// <param name="title"></param>
         /// <param name="value"></param>
-        public static void Loading(string title,string value)
+        public static void Loading(string title, string value)
         {
-            
+
         }
 
         /// <summary>
@@ -494,7 +494,7 @@ namespace FileToImage.Project
         /// <param name="value"></param>
         public static void Loading(string value)
         {
-            
+
         }
 
         /// <summary>
@@ -535,7 +535,7 @@ namespace FileToImage.Project
         /// <param name="textBox1">密码框</param>
         /// <param name="compressMode">压缩模式</param>
         /// <returns></returns>
-        public static int BmpToFile(string img,CheckBox checkBox1,ComboBox comboBox1,TextBox textBox1,CompressMode compressMode)
+        public static int BmpToFile(string img, CheckBox checkBox1, ComboBox comboBox1, TextBox textBox1, CompressMode compressMode)
         {
             var bmp = new Bitmap(img);
             var data = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height),
@@ -646,8 +646,119 @@ namespace FileToImage.Project
         /// <param name="comboBox1">下拉菜单</param>
         /// <param name="textBox1">密码框</param>
         /// <param name="compressMode">压缩模式</param>
+        /// <param name="outPath">输出存储位置</param>
         /// <returns></returns>
-        public static int BmpToFile(string img,bool checkBox1,string comboBox1,string textBox1,CompressMode compressMode)
+        public static int BmpToFile(string img, bool checkBox1, string comboBox1, string textBox1, CompressMode compressMode, string outPath)
+        {
+            if (File.Exists(outPath))
+            {
+                MessageBox.Show("文件: " + outPath + " 已经存在!", "错误", MessageBoxButtons.OK);
+                return 200;
+            }
+            var bmp = new Bitmap(img);
+            var data = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height),
+                System.Drawing.Imaging.ImageLockMode.ReadOnly,
+                bmp.PixelFormat);
+            var temp = new byte[bmp.Width * bmp.Height * 4];
+            var ptr = data.Scan0;
+            Marshal.Copy(ptr, temp, 0, data.Stride * data.Height);
+            var temp2 = new StringBuilder();
+            for (int i = 0; i < temp.Length; i++)
+            {
+                if (i % 4 == 3)
+                {
+                    continue;
+                }
+                else
+                {
+                    temp2.Append((char)temp[i]);
+                }
+            }
+            var values = temp2.ToString().ToDict();
+            temp2 = null;
+            var key = checkBox1 == false ? Base64._keyStr :
+                comboBox1 == "无" ? Base64._keyStr :
+                comboBox1 == "SHA256" ? Base64.GetKey(textBox1, CodingMode.SHA256) :
+                Base64._keyStr;
+            var coding = checkBox1 ? CodingMode.NoCoding.Pause(comboBox1) : CodingMode.NoCoding;
+
+            if (values["code"] != coding.ToString())
+            {
+                MessageBox.Show("选择编码方式错误!\n" + "文件是用 " + CodingMode.NoCoding.Pause(values["code"]).GetValue() + " 方式编码的!", "错误", MessageBoxButtons.OK);
+                CloseLoading();
+                GC.Collect();
+                return 300;
+            }
+
+            if (values["compress"] != compressMode.ToString())
+            {
+                MessageBox.Show("选择压缩方式错误!\n" + "文件是用 " + CompressMode.NoCompress.Pause(values["compress"]).GetValue() + " 方法压缩的!", "错误", MessageBoxButtons.OK);
+                CloseLoading();
+                GC.Collect();
+                return 301;
+            }
+
+            var value = Base64.Decode(values["data"], key);
+            try
+            {
+                var nowFile = new FileInfo(Base64.Decode(values["fileName"]));
+                var nowImg = new FileInfo(img);
+
+                var downValue = Item.StringToByte(value);
+                if (Item.MD5(downValue) != values["MD5"])
+                {
+                    //Console.Write(values.ToString(true));
+                    MessageBox.Show("密码错误!", "错误", MessageBoxButtons.OK);
+                    CloseLoading();
+                    GC.Collect();
+                    return 303;
+                }
+
+                if (compressMode == CompressMode.NoCompress)
+                {
+
+                }
+                else if (compressMode == CompressMode.CLZF)
+                {
+                    downValue = Item.Decompress(downValue);
+                }
+                else
+                {
+                    throw new Exception("没有这种编码方式!");
+                }
+                var downFile = File.Create(outPath);//nowImg.DirectoryName + "\\" + nowFile.Name);
+                downFile.Write(downValue, 0, downValue.Length);
+                downValue = null;//尝试释放内存
+                MessageBox.Show("解码完成!", "通知", MessageBoxButtons.OK);
+                Item.OpenOnWindows(new FileInfo(img).DirectoryName);
+                downFile.Dispose();
+                downFile.Close();
+            }
+            catch (InvalidCastException err)
+            {
+                MessageBox.Show("密码错误!" + err.Message, "错误", MessageBoxButtons.OK);
+                return 303;
+            }
+
+            bmp.Dispose();
+            //bmp.Clone();
+            data = null;
+            temp = null;
+            //temp2 = null;
+            return 100;
+        }
+
+        /// <summary>
+        /// 图片解码
+        /// </summary>
+        /// <param name="img">图片所在路径</param>
+        /// <param name="checkBox1">是否启用密码</param>
+        /// <param name="comboBox1">下拉菜单</param>
+        /// <param name="textBox1">密码框</param>
+        /// <param name="compressMode">压缩模式</param>
+        /// <param name="outPath">输出存储位置</param>
+        /// <returns></returns>
+        public static int BmpToFile(string img, bool checkBox1, string comboBox1, string textBox1, CompressMode compressMode)
         {
             var bmp = new Bitmap(img);
             var data = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height),
@@ -759,7 +870,7 @@ namespace FileToImage.Project
         /// <param name="textBox1">密码框</param>
         /// <param name="compressMode">压缩模式</param>
         /// <returns></returns>
-        public static int FileToBmp(string file,CheckBox checkBox1,ComboBox comboBox1,TextBox textBox1,CompressMode compressMode)
+        public static int FileToBmp(string file, CheckBox checkBox1, ComboBox comboBox1, TextBox textBox1, CompressMode compressMode)
         {
             var count = file.Length;
             var coding = checkBox1.Checked ? CodingMode.NoCoding.Pause(comboBox1.Text) : CodingMode.NoCoding;
@@ -844,8 +955,103 @@ namespace FileToImage.Project
         /// <param name="textBox1">密码框</param>
         /// <param name="compressMode">压缩模式</param>
         /// <returns></returns>
-        public static int FileToBmp(string file,bool checkBox1,string comboBox1,string textBox1,CompressMode compressMode)
+        public static int FileToBmp(string file, bool checkBox1, string comboBox1, string textBox1, CompressMode compressMode)
         {
+            if (File.Exists(file + ".EN.jpg"))
+            {
+                MessageBox.Show("文件: " + file+".EN.jpg" + " 已经存在!", "错误", MessageBoxButtons.OK);
+                return 200;
+            }
+            var count = file.Length;
+            var coding = checkBox1 ? CodingMode.NoCoding.Pause(comboBox1) : CodingMode.NoCoding;
+            var key = checkBox1 == false ? Base64._keyStr :
+                comboBox1 == "无" ? Base64._keyStr :
+                comboBox1 == "SHA256" ? Base64.GetKey(textBox1, CodingMode.SHA256) :
+                Base64._keyStr;
+
+            var temp = "";
+            var check = "";
+            var temp2 = new Dictionary<string, string>();
+            if (compressMode == CompressMode.NoCompress)
+            {
+                temp = Item.ReadFile(new FileInfo(file));
+                check = temp;
+                temp = Base64.Encode(temp, key);
+                while (temp.Length % 4 != 0)
+                {
+                    temp += "=";
+                }
+                temp2 = new Dictionary<string, string>()
+                {
+                    {"data",temp },
+                    {"fileName",Base64.Encode(file) },
+                    {"size",temp.Length.ToString() },
+                    {"code",coding.ToString() },
+                    {"compress",compressMode.ToString() },
+                    {"MD5",Item.MD5(Item.StringToByte(check)) },
+                    {"end","0" }//由于保存图片会有没有任何数据的结果,所以在字典上添加一个结尾标记
+                };
+            }
+            else if (compressMode == CompressMode.CLZF)
+            {
+                var tempByte = Item.ReadFile(file);
+                tempByte = Item.Compress(tempByte);
+                temp = Item.ByteToString(tempByte);
+                temp = Base64.Encode(temp, key);
+                while (temp.Length % 4 != 0)
+                {
+                    temp += "=";
+                }
+                temp2 = new Dictionary<string, string>()
+                {
+                    {"data",temp },
+                    {"fileName",Base64.Encode(file) },
+                    {"size",temp.Length.ToString() },
+                    {"code",coding.ToString() },
+                    {"compress",compressMode.ToString() },
+                    {"MD5",Item.MD5(tempByte) },
+                    {"end","0" }//由于保存图片会有没有任何数据的结果,所以在字典上添加一个结尾标记
+                };
+            }
+            else
+            {
+                throw new Exception("没有这种压缩模式!");
+            }
+            var temp3 = Item.StringToByte(temp2.ToString(true));
+            count = temp3.Length / 3;
+            var side = (int)Math.Ceiling(Math.Sqrt(count));
+            var bmp = new Bitmap(side, side);
+            var data = bmp.LockBits(new Rectangle(0, 0, side, side),
+                System.Drawing.Imaging.ImageLockMode.ReadWrite,
+                bmp.PixelFormat);
+            //指针
+            var ptr = data.Scan0;
+
+            Item.Base64ToBitmapData(ref data, temp3);
+            bmp.UnlockBits(data);
+            Item.BmpToJpgSave(bmp, file + ".EN.jpg");
+            MessageBox.Show("文件加密完成!", "通知", MessageBoxButtons.OK);
+            Item.OpenOnWindows(new FileInfo(file).DirectoryName);
+            bmp.Dispose();
+            return 100;
+        }
+
+        /// <summary>
+        /// 文件编码
+        /// </summary>
+        /// <param name="img">图片所在路径</param>
+        /// <param name="checkBox1">是否启用密码</param>
+        /// <param name="comboBox1">下拉菜单</param>
+        /// <param name="textBox1">密码框</param>
+        /// <param name="compressMode">压缩模式</param>
+        /// <returns></returns>
+        public static int FileToBmp(string file, bool checkBox1, string comboBox1, string textBox1, CompressMode compressMode,string outPath)
+        {
+            if (File.Exists(outPath))
+            {
+                MessageBox.Show("文件: " + outPath + " 已经存在!", "错误", MessageBoxButtons.OK);
+                return 200;
+            }
             var count = file.Length;
             var coding = checkBox1 ? CodingMode.NoCoding.Pause(comboBox1) : CodingMode.NoCoding;
             var key = checkBox1 == false ? Base64._keyStr :
@@ -931,7 +1137,7 @@ namespace FileToImage.Project
         /// <param name="pictureBox1">图片显示框</param>
         /// <param name="label1">图片未显示时内容</param>
         /// <returns></returns>
-        public static int FileToBmpShow(string file, CheckBox checkBox1, ComboBox comboBox1, TextBox textBox1, CompressMode compressMode,PictureBox pictureBox1,Label label1)
+        public static int FileToBmpShow(string file, CheckBox checkBox1, ComboBox comboBox1, TextBox textBox1, CompressMode compressMode, PictureBox pictureBox1, Label label1)
         {
             var count = file.Length;
             var coding = checkBox1.Checked ? CodingMode.NoCoding.Pause(comboBox1.Text) : CodingMode.NoCoding;
@@ -1303,6 +1509,116 @@ namespace FileToImage.Project
             else
             {
                 return dict.ToString();
+            }
+        }
+
+        /// <summary>
+        /// 将列表转为字符串
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="objects"></param>
+        /// <param name="tf"></param>
+        /// <returns></returns>
+        public static string ToString<T>(this T[] objects, bool tf)
+        {
+            if (tf)
+            {
+                var ret = typeof(T).ToString();
+                ret += "[" + objects.Length + "] { ";
+                for (int i = 0; i < objects.Length; i++)
+                {
+                    ret += objects[i].ToString();
+                    if (i < objects.Length - 1)
+                    {
+                        ret += ", ";
+                    }
+                }
+                ret += " }";
+                return ret;
+            }
+            else
+            {
+                return objects.ToString();
+            }
+        }
+    }
+
+    /// <summary>
+    /// 项目空间追加函数块
+    /// </summary>
+    public static class ProjectAdd
+    {
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="mode"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static CodingMode Pause(this CodingMode mode, string value)
+        {
+            switch (value)
+            {
+                case "无":
+                case "No":
+                case "False":
+                case "false":
+                case "null":
+                case "none":
+                case "None":
+                case "no":
+                case "NaN":
+                    return CodingMode.NoCoding;
+                default:
+                    return (CodingMode)Enum.Parse(typeof(CodingMode), value);
+            }
+        }
+
+        public static string GetValue(this CodingMode mode)
+        {
+            switch (mode)
+            {
+                case CodingMode.NoCoding:
+                    return "无";
+                case CodingMode.SHA256:
+                    return "SHA256";
+                case CodingMode.MD5:
+                    return "MD5";
+                default:
+                    throw new Exception("没有这个参数!");
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="project"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static Project Pause(this Project project,string value)
+        {
+            switch (value)
+            {
+                case "无":
+                case "No":
+                case "False":
+                case "false":
+                case "null":
+                case "none":
+                case "None":
+                case "no":
+                case "NaN":
+                    return Project.NoInput;
+                case "BTF":
+                case "BmpToFile":
+                case "bmpToFile":
+                    return Project.BmpToFile;
+                case "FTB":
+                case "FileToBmp":
+                case "fileToBmp":
+                    return Project.FileToBmp;
+                default:
+                    return Project.NoInput;
             }
         }
     }

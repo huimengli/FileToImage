@@ -374,6 +374,14 @@ namespace FileToImage.Project
             switch (value)
             {
                 case "无":
+                case "No":
+                case "False":
+                case "false":
+                case "null":
+                case "none":
+                case "None":
+                case "no":
+                case "NaN":
                     return CompressMode.NoCompress;
                 default:
                     return (CompressMode)Enum.Parse(typeof(CompressMode), value);

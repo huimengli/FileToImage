@@ -3,8 +3,34 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+/// <summary>
+/// 项目空间
+/// </summary>
 namespace FileToImage.Project
 {
+    /// <summary>
+    /// 工作计划
+    /// </summary>
+    public enum Project
+    {
+        /// <summary>
+        /// 没有输入
+        /// </summary>
+        NoInput,
+
+        /// <summary>
+        /// 文件转为图片
+        /// </summary>
+        FileToBmp,
+
+        /// <summary>
+        /// 图片转为文件
+        /// </summary>
+        BmpToFile,
+
+
+    }
+
     /// <summary>
     /// 编码加密方式
     /// </summary>
@@ -397,38 +423,6 @@ namespace FileToImage.Project
         public static T GetRandomOne<T>(this List<T> list)
         {
             return list.GetRandomOne<T>(false);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="mode"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static CodingMode Pause(this CodingMode mode, string value)
-        {
-            switch (value)
-            {
-                case "无":
-                    return CodingMode.NoCoding;
-                default:
-                    return (CodingMode)Enum.Parse(typeof(CodingMode), value);
-            }
-        }
-
-        public static string GetValue(this CodingMode mode)
-        {
-            switch (mode)
-            {
-                case CodingMode.NoCoding:
-                    return "无";
-                case CodingMode.SHA256:
-                    return "SHA256";
-                case CodingMode.MD5:
-                    return "MD5";
-                default:
-                    throw new Exception("没有这个参数!");
-            }
         }
     }
 }
