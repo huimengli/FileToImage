@@ -54,7 +54,7 @@ namespace FileToImage
 -CM No(没有压缩)/CLZF(CLZF压缩模式)
 
 —————————————————————————
-"; 
+";
         #endregion
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace FileToImage
         [STAThread]
         static void Main(string[] args)
         {
-            if (args.Length==0)
+            if (args.Length == 0)
             {
                 //防止多个工具同时运行
                 if (Process.GetProcessesByName(Process.GetCurrentProcess().ProcessName).Length > 1)
@@ -116,156 +116,161 @@ namespace FileToImage
             }
             else
             {
-                try
+                //处理未捕获的异常模式
+                Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+                //处理UI线程异常
+                Application.ThreadException += new System.Threading.ThreadExceptionEventHandler(Application_ThreadException);
+                //处理非UI线程异常
+                AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+
+                var project = Project.Project.NoInput;
+                var inputpath = "";
+                var outpath = "";
+                var needkey = false;
+                var keyMode = CodingMode.NoCoding;
+                var keyValue = "";
+                var compressMode = CompressMode.NoCompress;
+
+                //Console.WriteLine(args.ToString());
+                //MessageBox.Show(args.ToString(true));
+
+                Match match;
+                string temp;
+                //检查给予参数
+                for (int i = 0; i < args.Length; i++)
                 {
-                    var project = Project.Project.NoInput;
-                    var inputpath = "";
-                    var outpath = "";
-                    var needkey = false;
-                    var keyMode = CodingMode.NoCoding;
-                    var keyValue = "";
-                    var compressMode = CompressMode.NoCompress;
-
-                    //Console.WriteLine(args.ToString());
-                    //MessageBox.Show(args.ToString(true));
-
-                    Match match;
-                    string temp;
-                    //检查给予参数
-                    for (int i = 0; i < args.Length; i++)
+                    match = Read_.Match(args[i]);
+                    temp = match.Groups[1].ToString();
+                    if (temp == "/" || temp == "-")
                     {
-                        match = Read_.Match(args[i]);
-                        temp = match.Groups[1].ToString();
-                        if (temp == "/" || temp == "-")
+                        temp = match.Groups[2].ToString();
+                        //帮助
+                        if (temp == "?" || temp == "help")
                         {
-                            temp = match.Groups[2].ToString();
-                            //帮助
-                            if (temp == "?" || temp == "help")
+                            MessageBox.Show(message, "帮助", MessageBoxButtons.OK);
+                            return;
+                        }
+                        //工作模式
+                        else if (temp == "FTB" || temp == "fileToBmp")
+                        {
+                            if (project == Project.Project.NoInput)
                             {
-                                MessageBox.Show(message, "帮助", MessageBoxButtons.OK);
+                                project = Project.Project.FileToBmp;
+                            }
+                            else
+                            {
+                                MessageBox.Show("不能多次设定工作模式!", "错误", MessageBoxButtons.OK);
                                 return;
                             }
-                            //工作模式
-                            else if (temp == "FTB" || temp == "fileToBmp")
-                            {
-                                if (project == Project.Project.NoInput)
-                                {
-                                    project = Project.Project.FileToBmp;
-                                }
-                                else
-                                {
-                                    MessageBox.Show("不能多次设定工作模式!", "错误", MessageBoxButtons.OK);
-                                    return;
-                                }
-                            }
-                            else if (temp == "BTF" || temp == "bmpToFile")
-                            {
-                                if (project == Project.Project.NoInput)
-                                {
-                                    project = Project.Project.BmpToFile;
-                                }
-                                else
-                                {
-                                    MessageBox.Show("不能多次设定工作模式!", "错误", MessageBoxButtons.OK);
-                                    return;
-                                }
-                            }
-                            //输入文件路径
-                            else if (temp == "IP" || temp == "inputPath" || temp == "inputpath")
-                            {
-                                inputpath = args[i + 1];
-                            }
-                            //输出文件路径
-                            else if (temp == "OP" || temp == "outPath" || temp == "outpath")
-                            {
-                                outpath = args[i + 1];
-                            }
-                            //是否需要密码
-                            else if (temp == "NK" || temp == "needKey" || temp == "needkey")
-                            {
-                                needkey = true;
-                            }
-                            //加密模式
-                            else if (temp == "KM" || temp == "keyMode" || temp == "keymode")
-                            {
-                                keyMode = CodingMode.NoCoding.Pause(args[i + 1]);
-                            }
-                            //输入密码
-                            else if (temp == "KV" || temp == "keyValue" || temp == "keyvalue")
-                            {
-                                keyValue = args[i + 1];
-                            }
-                            else if (temp == "P" || temp == "password")
-                            {
-                                needkey = true;
-                                keyMode = CodingMode.SHA256;
-                                keyValue = args[i + 1];
-                            }
-                            //压缩模式
-                            else if (temp == "CM" || temp == "compressMode" || temp == "compressmode")
-                            {
-                                compressMode = CompressMode.NoCompress.Pause(args[i + 1]);
-                            }
                         }
-                    }
-
-                    #region 检查缺少的参数
-                    //如果缺少工作模式
-                    while (project == Project.Project.NoInput)
-                    {
-                        MessageBox.Show("工作模式错误!\n需要重新输入!", "错误", MessageBoxButtons.OK);
-                        temp = Interaction.InputBox("请输入工作模式!", "提示", "BTF/FTB");
-                        project = Project.Project.NoInput.Pause(temp);
-                    }
-                    //如果缺少输入文件
-                    while (inputpath == null || string.IsNullOrEmpty(inputpath))
-                    {
-                        inputpath = Item.GetFile();
-                        if (!File.Exists(inputpath))
+                        else if (temp == "BTF" || temp == "bmpToFile")
                         {
-                            inputpath = "";
+                            if (project == Project.Project.NoInput)
+                            {
+                                project = Project.Project.BmpToFile;
+                            }
+                            else
+                            {
+                                MessageBox.Show("不能多次设定工作模式!", "错误", MessageBoxButtons.OK);
+                                return;
+                            }
+                        }
+                        //输入文件路径
+                        else if (temp == "IP" || temp == "inputPath" || temp == "inputpath")
+                        {
+                            inputpath = args[i + 1];
+                        }
+                        //输出文件路径
+                        else if (temp == "OP" || temp == "outPath" || temp == "outpath")
+                        {
+                            outpath = args[i + 1];
+                        }
+                        //是否需要密码
+                        else if (temp == "NK" || temp == "needKey" || temp == "needkey")
+                        {
+                            needkey = true;
+                        }
+                        //加密模式
+                        else if (temp == "KM" || temp == "keyMode" || temp == "keymode")
+                        {
+                            keyMode = CodingMode.NoCoding.Pause(args[i + 1]);
+                        }
+                        //输入密码
+                        else if (temp == "KV" || temp == "keyValue" || temp == "keyvalue")
+                        {
+                            keyValue = args[i + 1];
+                        }
+                        else if (temp == "P" || temp == "password")
+                        {
+                            needkey = true;
+                            keyMode = CodingMode.SHA256;
+                            keyValue = args[i + 1];
+                        }
+                        //压缩模式
+                        else if (temp == "CM" || temp == "compressMode" || temp == "compressmode")
+                        {
+                            compressMode = CompressMode.NoCompress.Pause(args[i + 1]);
                         }
                     }
-                    #endregion
-
-                    var ret = 0;
-
-                    //运行功能
-                    switch (project)
-                    {
-                        case Project.Project.NoInput:
-                            MessageBox.Show("没有选择工具模式!", "错误", MessageBoxButtons.OK);
-                            return;
-                        case Project.Project.FileToBmp:
-                            if (string.IsNullOrEmpty(outpath))
-                            {
-                                ret = Item.FileToBmp(inputpath, needkey, keyMode.GetValue(), keyValue, compressMode);
-                            }
-                            else
-                            {
-                                ret = Item.FileToBmp(inputpath, needkey, keyMode.GetValue(), keyValue, compressMode, outpath);
-                            }
-                            return;
-                        case Project.Project.BmpToFile:
-                            if (string.IsNullOrEmpty(outpath))
-                            {
-                                ret = Item.BmpToFile(inputpath, needkey, keyMode.GetValue(), keyValue, compressMode);
-                            }
-                            else
-                            {
-                                ret = Item.BmpToFile(inputpath, needkey, keyMode.GetValue(), keyValue, compressMode, outpath);
-                            }
-                            return;
-                        default:
-                            MessageBox.Show("没有这个模式!", "错误", MessageBoxButtons.OK);
-                            return;
-                    }
-
                 }
-                catch (Exception err)
+
+                #region 检查缺少的参数
+                //如果缺少工作模式
+                while (project == Project.Project.NoInput)
                 {
-                    MessageBox.Show(string.Format("图片和文件互转错误:{0};\n\r堆栈信息:{1}", err.Message,err.StackTrace),"系统错误",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                    MessageBox.Show("工作模式错误!\n需要重新输入!", "错误", MessageBoxButtons.OK);
+                    temp = Interaction.InputBox("请输入工作模式!", "提示", "BTF/FTB");
+                    project = Project.Project.NoInput.Pause(temp);
                 }
+                //如果缺少输入文件
+                while (inputpath == null || string.IsNullOrEmpty(inputpath))
+                {
+                    inputpath = Item.GetFile();
+                    if (!File.Exists(inputpath))
+                    {
+                        inputpath = "";
+                    }
+                }
+                #endregion
+
+                var ret = 0;
+
+                //运行功能
+                switch (project)
+                {
+                    case Project.Project.NoInput:
+                        MessageBox.Show("没有选择工具模式!", "错误", MessageBoxButtons.OK);
+                        return;
+                    case Project.Project.FileToBmp:
+                        if (string.IsNullOrEmpty(outpath))
+                        {
+                            ret = Item.FileToBmp(inputpath, needkey, keyMode.GetValue(), keyValue, compressMode);
+                        }
+                        else
+                        {
+                            ret = Item.FileToBmp(inputpath, needkey, keyMode.GetValue(), keyValue, compressMode, outpath);
+                        }
+                        return;
+                    case Project.Project.BmpToFile:
+                        if (string.IsNullOrEmpty(outpath))
+                        {
+                            ret = Item.BmpToFile(inputpath, needkey, keyMode.GetValue(), keyValue, compressMode);
+                        }
+                        else
+                        {
+                            ret = Item.BmpToFile(inputpath, needkey, keyMode.GetValue(), keyValue, compressMode, outpath);
+                        }
+                        return;
+                    default:
+                        MessageBox.Show("没有这个模式!", "错误", MessageBoxButtons.OK);
+                        return;
+                }
+
+                //}
+                //catch (Exception err)
+                //{
+                //    MessageBox.Show(string.Format("图片和文件互转错误:{0} \n\r堆栈信息:{1}", err.Message,err.StackTrace),"系统错误",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                //}
             }
         }
 
@@ -312,6 +317,11 @@ namespace FileToImage
 
             MessageBox.Show(str, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             //MessageBox.Show("发生致命错误，请停止当前操作并及时联系作者！", "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
+        static void My_CurrentDomain_UnhandledException(object sender,UnhandledExceptionEventArgs e)
+        {
+
         }
     }
 }
