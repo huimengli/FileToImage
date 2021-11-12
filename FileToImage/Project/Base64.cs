@@ -333,6 +333,10 @@ namespace FileToImage.Project
                     for (int i = 0; i < keyss.Count; i++)
                     {
                         var x = key2.Substring(0, keyss[i]);
+                        if (x.Length == 0)
+                        {
+                            continue;
+                        }
                         key2 = key2.Replace(x, "");
                         key.Add(keys[i].ToString(), x);
                     }
