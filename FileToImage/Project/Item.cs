@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -16,6 +17,11 @@ namespace FileToImage.Project
     /// </summary>
     static class Item
     {
+        /// <summary>
+        /// 当前设备的名称
+        /// </summary>
+        public static string HostName = Dns.GetHostName();
+
         /// <summary>
         /// 打开网站|其他东西
         /// </summary>
@@ -1211,6 +1217,72 @@ namespace FileToImage.Project
             label1.Visible = false;
             return 100;
         }
+
+        /// <summary>
+        /// 创建一个UUID
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public static string NewUUID(string input)
+        {
+            input = MD5(input);
+            var sha = SHA256(input);
+            var dex = "";
+            var uuid = "uuxxxuuy-1xxx-7xxx-yxxx-xxx0xxxy";
+            var ret = "";
+            var i = 0;
+            for (i = 0; i < uuid.Length; i++)
+            {
+                var r = uuid[i];
+                if (r == 'u')
+                {
+                    ret += sha[2 * i].ToString();
+                    dex += sha[2 * i].ToString();
+                }
+                else if (r == 'x')
+                {
+                    ret += input[i].ToString();
+                    dex += input[i].ToString();
+                }
+                else if (r == 'y')
+                {
+                    ret += MD5(dex)[i].ToString();
+                }
+                else
+                {
+                    ret += r.ToString();
+                }
+            }
+            return ret;
+        }
+
+        /// <summary>
+        /// 创建一个UUID
+        /// </summary>
+        /// <returns></returns>
+        public static string NewUUID()
+        {
+            var input = DateTime.Now.ToFileTime();
+            return NewUUID(input.ToString());
+        }
+
+        /// <summary>
+        /// 获取UID
+        /// (如果没有则新建uid并存储)
+        /// </summary>
+        /// <returns></returns>
+        public static string GetUID()
+        {
+            var uid = PlayerPrefs.GetString("uid");//,Item.NewUUID());
+            if (string.IsNullOrWhiteSpace(uid))
+            {
+                uid = Item.NewUUID(HostName);
+                PlayerPrefs.SetString("uid", uid);
+                PlayerPrefs.Save();
+            }
+            return uid;
+        }
+
     }
 
     /// <summary>

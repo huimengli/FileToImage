@@ -73,6 +73,9 @@
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net461\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -93,7 +96,9 @@
     <Compile Include="Program.cs" />
     <Compile Include="Project\Base64.cs" />
     <Compile Include="Project\Compress.cs" />
+    <Compile Include="Project\HttpPost.cs" />
     <Compile Include="Project\Item.cs" />
+    <Compile Include="Project\PlayerPrefs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Main.resx">
       <DependentUpon>Main.cs</DependentUpon>
@@ -109,6 +114,7 @@
     </Compile>
     <None Include="FileToImage_KEY.pfx" />
     <None Include="FileToImage_TemporaryKey.pfx" />
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
