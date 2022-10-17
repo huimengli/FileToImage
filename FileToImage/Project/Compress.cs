@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Text;
+using System.IO;
+using System.IO.Compression;
 
 namespace FileToImage.Project
 {
@@ -344,6 +347,128 @@ namespace FileToImage.Project
     }
 
     /// <summary>
+    /// 使用ZIP进行压缩
+    /// </summary>
+    public static class ZIP
+    {
+        /// <summary>
+        /// 临时文件
+        /// </summary>
+        public static string TempFile = "temp.file";
+
+        /// <summary>
+        /// 压缩,需要用到临时文件
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static byte[] Compress(byte[] bytes)
+        {
+            using (var ms = new MemoryStream(bytes))
+            {
+                using (var cf = File.Create(TempFile))
+                {
+                    using (var compresor = new GZipStream(cf, CompressionMode.Compress))
+                    {
+                        ms.CopyTo(compresor);
+                    }
+                }
+            }
+            using (var cf = new FileInfo(TempFile).OpenRead())
+            {
+                var ret = new byte[cf.Length];
+                cf.Read(ret, 0, ret.Length);
+                cf.Close();
+                File.Delete(TempFile);
+                return ret;
+            }
+        }
+
+        /// <summary>
+        /// 解压缩,需要用到临时文件
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static byte[] Decompress(byte[] bytes)
+        {
+            var ms = new MemoryStream(bytes);
+            var tf = File.Create(TempFile);
+            var compresor = new GZipStream(ms, CompressionMode.Decompress);
+            compresor.CopyTo(tf);
+            compresor.Close();
+            tf.Close();
+            ms.Close();
+
+            tf = new FileInfo(TempFile).OpenRead();
+            var ret = new byte[tf.Length];
+            tf.Read(ret, 0, ret.Length);
+            tf.Close();
+            File.Delete(TempFile);
+            return ret;
+        }
+    }
+
+    /// <summary>
+    /// 使用DeflateStream进行压缩
+    /// </summary>
+    public static class Deflate
+    {
+        /// <summary>
+        /// 临时文件
+        /// </summary>
+        public static string TempFile = "temp.file";
+
+        /// <summary>
+        /// 压缩,需要用到临时文件
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static byte[] Compress(byte[] bytes)
+        {
+            using (var ms = new MemoryStream(bytes))
+            {
+                using (var cf = File.Create(TempFile))
+                {
+                    using (var compresor = new DeflateStream(cf, CompressionMode.Compress))
+                    {
+                        ms.CopyTo(compresor);
+                    }
+                }
+            }
+            using (var cf = new FileInfo(TempFile).OpenRead())
+            {
+                var ret = new byte[cf.Length];
+                cf.Read(ret, 0, ret.Length);
+                cf.Close();
+                File.Delete(TempFile);
+                return ret;
+            }
+        }
+
+        /// <summary>
+        /// 解压缩,需要用到临时文件
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static byte[] Decompress(byte[] bytes)
+        {
+            var ms = new MemoryStream(bytes);
+            var tf = File.Create(TempFile);
+            var compresor = new DeflateStream(ms, CompressionMode.Decompress);
+            compresor.CopyTo(tf);
+            compresor.Close();
+            tf.Close();
+            ms.Close();
+
+            tf = new FileInfo(TempFile).OpenRead();
+            var ret = new byte[tf.Length];
+            tf.Read(ret, 0, ret.Length);
+            tf.Close();
+            File.Delete(TempFile);
+            return ret;
+        }
+    }
+
+    /// <summary>
     /// 压缩编码方式
     /// </summary>
     public enum CompressMode
@@ -399,6 +524,27 @@ namespace FileToImage.Project
                 default:
                     throw new Exception("没有这个参数!");
             }
+        }
+
+        /// <summary>
+        /// 字节串添加
+        /// </summary>
+        /// <param name="vs"></param>
+        /// <param name="add"></param>
+        /// <returns></returns>
+        public static byte[] add(this byte[] vs, byte[] add)
+        {
+            var ret = new byte[vs.Length + add.Length];
+            var index = 0;
+            foreach (var i in vs)
+            {
+                ret[index++] = i;
+            }
+            foreach (var i in add)
+            {
+                ret[index++] = i;
+            }
+            return ret;
         }
     }
 }

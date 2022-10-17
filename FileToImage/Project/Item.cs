@@ -526,6 +526,43 @@ namespace FileToImage.Project
         }
 
         /// <summary>
+        /// 压缩字节
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <param name="mode"></param>
+        /// <returns></returns>
+        public static byte[] Compress(byte[] bytes,CompressMode mode) {
+            switch (mode)
+            {
+                case CompressMode.NoCompress:
+                    return bytes;
+                case CompressMode.CLZF:
+                    return CLZF.Compress(bytes);
+                default:
+                    throw new Exception("未知压缩字节模式");
+            }
+        }
+
+        /// <summary>
+        /// 解压字节
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <param name="mode"></param>
+        /// <returns></returns>
+        public static byte[] Decompress(byte[] bytes, CompressMode mode)
+        {
+            switch (mode)
+            {
+                case CompressMode.NoCompress:
+                    return bytes;
+                case CompressMode.CLZF:
+                    return CLZF.Decompress(bytes);
+                default:
+                    throw new Exception("未知压缩字节模式");
+            }
+        }
+
+        /// <summary>
         /// 图片解码
         /// 常见错误:
         /// </summary>
