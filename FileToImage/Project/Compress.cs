@@ -482,6 +482,16 @@ namespace FileToImage.Project
         /// C#LZF压缩
         /// </summary>
         CLZF,
+
+        /// <summary>
+        /// 使用GZIPStream进行压缩
+        /// </summary>
+        ZIP,
+
+        /// <summary>
+        /// 使用DeflateStream进行压缩
+        /// </summary>
+        Deflate,
     }
 
     /// <summary>
@@ -521,6 +531,10 @@ namespace FileToImage.Project
                     return "无";
                 case CompressMode.CLZF:
                     return "CLZF";
+                case CompressMode.ZIP:
+                    return "ZIP";
+                case CompressMode.Deflate:
+                    return "Deflate";
                 default:
                     throw new Exception("没有这个参数!");
             }

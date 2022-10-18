@@ -531,13 +531,18 @@ namespace FileToImage.Project
         /// <param name="bytes"></param>
         /// <param name="mode"></param>
         /// <returns></returns>
-        public static byte[] Compress(byte[] bytes,CompressMode mode) {
+        public static byte[] Compress(byte[] bytes, CompressMode mode)
+        {
             switch (mode)
             {
                 case CompressMode.NoCompress:
                     return bytes;
                 case CompressMode.CLZF:
                     return CLZF.Compress(bytes);
+                case CompressMode.ZIP:
+                    return ZIP.Compress(bytes);
+                case CompressMode.Deflate:
+                    return Deflate.Compress(bytes);
                 default:
                     throw new Exception("未知压缩字节模式");
             }
@@ -557,6 +562,10 @@ namespace FileToImage.Project
                     return bytes;
                 case CompressMode.CLZF:
                     return CLZF.Decompress(bytes);
+                case CompressMode.ZIP:
+                    return ZIP.Decompress(bytes);
+                case CompressMode.Deflate:
+                    return Deflate.Decompress(bytes);
                 default:
                     throw new Exception("未知压缩字节模式");
             }
@@ -639,18 +648,7 @@ namespace FileToImage.Project
                         return 303;
                     }
 
-                    if (compressMode == CompressMode.NoCompress)
-                    {
-
-                    }
-                    else if (compressMode == CompressMode.CLZF)
-                    {
-                        downValue = Item.Decompress(downValue);
-                    }
-                    else
-                    {
-                        throw new Exception("没有这种编码方式!");
-                    }
+                    downValue = Item.Decompress(downValue, compressMode);
                     var downFile = File.Create(nowImg.DirectoryName + "\\" + nowFile.Name);
                     downFile.Write(downValue, 0, downValue.Length);
                     downValue = null;//尝试释放内存
@@ -751,18 +749,7 @@ namespace FileToImage.Project
                     return 303;
                 }
 
-                if (compressMode == CompressMode.NoCompress)
-                {
-
-                }
-                else if (compressMode == CompressMode.CLZF)
-                {
-                    downValue = Item.Decompress(downValue);
-                }
-                else
-                {
-                    throw new Exception("没有这种编码方式!");
-                }
+                downValue = Item.Decompress(downValue, compressMode);
                 var downFile = File.Create(outPath);//nowImg.DirectoryName + "\\" + nowFile.Name);
                 downFile.Write(downValue, 0, downValue.Length);
                 downValue = null;//尝试释放内存
@@ -862,18 +849,7 @@ namespace FileToImage.Project
                         return 303;
                     }
 
-                    if (compressMode == CompressMode.NoCompress)
-                    {
-
-                    }
-                    else if (compressMode == CompressMode.CLZF)
-                    {
-                        downValue = Item.Decompress(downValue);
-                    }
-                    else
-                    {
-                        throw new Exception("没有这种编码方式!");
-                    }
+                    downValue = Item.Decompress(downValue, compressMode);
                     var downFile = File.Create(nowImg.DirectoryName + "\\" + nowFile.Name);
                     downFile.Write(downValue, 0, downValue.Length);
                     downValue = null;//尝试释放内存
@@ -917,53 +893,27 @@ namespace FileToImage.Project
                 Base64._keyStr;
 
             var temp = "";
-            var check = "";
             var temp2 = new Dictionary<string, string>();
-            if (compressMode == CompressMode.NoCompress)
+
+            var tempByte = Item.ReadFile(file);
+            tempByte = Item.Compress(tempByte,compressMode);
+            temp = Item.ByteToString(tempByte);
+            temp = Base64.Encode(temp, key);
+            while (temp.Length % 4 != 0)
             {
-                temp = Item.ReadFile(new FileInfo(file));
-                check = temp;
-                temp = Base64.Encode(temp, key);
-                while (temp.Length % 4 != 0)
-                {
-                    temp += "=";
-                }
-                temp2 = new Dictionary<string, string>()
-                {
-                    {"data",temp },
-                    {"fileName",Base64.Encode(file) },
-                    {"size",temp.Length.ToString() },
-                    {"code",coding.ToString() },
-                    {"compress",compressMode.ToString() },
-                    {"MD5",Item.MD5(Item.StringToByte(check)) },
-                    {"end","0" }//由于保存图片会有没有任何数据的结果,所以在字典上添加一个结尾标记
-                };
+                temp += "=";
             }
-            else if (compressMode == CompressMode.CLZF)
+            temp2 = new Dictionary<string, string>()
             {
-                var tempByte = Item.ReadFile(file);
-                tempByte = Item.Compress(tempByte);
-                temp = Item.ByteToString(tempByte);
-                temp = Base64.Encode(temp, key);
-                while (temp.Length % 4 != 0)
-                {
-                    temp += "=";
-                }
-                temp2 = new Dictionary<string, string>()
-                {
-                    {"data",temp },
-                    {"fileName",Base64.Encode(file) },
-                    {"size",temp.Length.ToString() },
-                    {"code",coding.ToString() },
-                    {"compress",compressMode.ToString() },
-                    {"MD5",Item.MD5(tempByte) },
-                    {"end","0" }//由于保存图片会有没有任何数据的结果,所以在字典上添加一个结尾标记
-                };
-            }
-            else
-            {
-                throw new Exception("没有这种压缩模式!");
-            }
+                {"data",temp },
+                {"fileName",Base64.Encode(file) },
+                {"size",temp.Length.ToString() },
+                {"code",coding.ToString() },
+                {"compress",compressMode.ToString() },
+                {"MD5",Item.MD5(tempByte) },
+                {"end","0" }//由于保存图片会有没有任何数据的结果,所以在字典上添加一个结尾标记
+            };
+
             var temp3 = Item.StringToByte(temp2.ToString(true));
             count = temp3.Length / 3;
             var side = (int)Math.Ceiling(Math.Sqrt(count));
@@ -996,7 +946,7 @@ namespace FileToImage.Project
         {
             if (File.Exists(file + ".EN.jpg"))
             {
-                MessageBox.Show("文件: " + file+".EN.jpg" + " 已经存在!", "错误", MessageBoxButtons.OK);
+                MessageBox.Show("文件: " + file + ".EN.jpg" + " 已经存在!", "错误", MessageBoxButtons.OK);
                 return 200;
             }
             var count = file.Length;
@@ -1007,53 +957,27 @@ namespace FileToImage.Project
                 Base64._keyStr;
 
             var temp = "";
-            var check = "";
             var temp2 = new Dictionary<string, string>();
-            if (compressMode == CompressMode.NoCompress)
+
+            var tempByte = Item.ReadFile(file);
+            tempByte = Item.Compress(tempByte,compressMode);
+            temp = Item.ByteToString(tempByte);
+            temp = Base64.Encode(temp, key);
+            while (temp.Length % 4 != 0)
             {
-                temp = Item.ReadFile(new FileInfo(file));
-                check = temp;
-                temp = Base64.Encode(temp, key);
-                while (temp.Length % 4 != 0)
-                {
-                    temp += "=";
-                }
-                temp2 = new Dictionary<string, string>()
-                {
-                    {"data",temp },
-                    {"fileName",Base64.Encode(file) },
-                    {"size",temp.Length.ToString() },
-                    {"code",coding.ToString() },
-                    {"compress",compressMode.ToString() },
-                    {"MD5",Item.MD5(Item.StringToByte(check)) },
-                    {"end","0" }//由于保存图片会有没有任何数据的结果,所以在字典上添加一个结尾标记
-                };
+                temp += "=";
             }
-            else if (compressMode == CompressMode.CLZF)
+            temp2 = new Dictionary<string, string>()
             {
-                var tempByte = Item.ReadFile(file);
-                tempByte = Item.Compress(tempByte);
-                temp = Item.ByteToString(tempByte);
-                temp = Base64.Encode(temp, key);
-                while (temp.Length % 4 != 0)
-                {
-                    temp += "=";
-                }
-                temp2 = new Dictionary<string, string>()
-                {
-                    {"data",temp },
-                    {"fileName",Base64.Encode(file) },
-                    {"size",temp.Length.ToString() },
-                    {"code",coding.ToString() },
-                    {"compress",compressMode.ToString() },
-                    {"MD5",Item.MD5(tempByte) },
-                    {"end","0" }//由于保存图片会有没有任何数据的结果,所以在字典上添加一个结尾标记
-                };
-            }
-            else
-            {
-                throw new Exception("没有这种压缩模式!");
-            }
+                {"data",temp },
+                {"fileName",Base64.Encode(file) },
+                {"size",temp.Length.ToString() },
+                {"code",coding.ToString() },
+                {"compress",compressMode.ToString() },
+                {"MD5",Item.MD5(tempByte) },
+                {"end","0" }//由于保存图片会有没有任何数据的结果,所以在字典上添加一个结尾标记
+            };
+
             var temp3 = Item.StringToByte(temp2.ToString(true));
             count = temp3.Length / 3;
             var side = (int)Math.Ceiling(Math.Sqrt(count));
@@ -1082,7 +1006,7 @@ namespace FileToImage.Project
         /// <param name="textBox1">密码框</param>
         /// <param name="compressMode">压缩模式</param>
         /// <returns></returns>
-        public static int FileToBmp(string file, bool checkBox1, string comboBox1, string textBox1, CompressMode compressMode,string outPath)
+        public static int FileToBmp(string file, bool checkBox1, string comboBox1, string textBox1, CompressMode compressMode, string outPath)
         {
             if (File.Exists(outPath))
             {
@@ -1097,39 +1021,17 @@ namespace FileToImage.Project
                 Base64._keyStr;
 
             var temp = "";
-            var check = "";
             var temp2 = new Dictionary<string, string>();
-            if (compressMode == CompressMode.NoCompress)
+
+            var tempByte = Item.ReadFile(file);
+            tempByte = Item.Compress(tempByte,compressMode);
+            temp = Item.ByteToString(tempByte);
+            temp = Base64.Encode(temp, key);
+            while (temp.Length % 4 != 0)
             {
-                temp = Item.ReadFile(new FileInfo(file));
-                check = temp;
-                temp = Base64.Encode(temp, key);
-                while (temp.Length % 4 != 0)
-                {
-                    temp += "=";
-                }
-                temp2 = new Dictionary<string, string>()
-                {
-                    {"data",temp },
-                    {"fileName",Base64.Encode(file) },
-                    {"size",temp.Length.ToString() },
-                    {"code",coding.ToString() },
-                    {"compress",compressMode.ToString() },
-                    {"MD5",Item.MD5(Item.StringToByte(check)) },
-                    {"end","0" }//由于保存图片会有没有任何数据的结果,所以在字典上添加一个结尾标记
-                };
+                temp += "=";
             }
-            else if (compressMode == CompressMode.CLZF)
-            {
-                var tempByte = Item.ReadFile(file);
-                tempByte = Item.Compress(tempByte);
-                temp = Item.ByteToString(tempByte);
-                temp = Base64.Encode(temp, key);
-                while (temp.Length % 4 != 0)
-                {
-                    temp += "=";
-                }
-                temp2 = new Dictionary<string, string>()
+            temp2 = new Dictionary<string, string>()
                 {
                     {"data",temp },
                     {"fileName",Base64.Encode(file) },
@@ -1139,11 +1041,7 @@ namespace FileToImage.Project
                     {"MD5",Item.MD5(tempByte) },
                     {"end","0" }//由于保存图片会有没有任何数据的结果,所以在字典上添加一个结尾标记
                 };
-            }
-            else
-            {
-                throw new Exception("没有这种压缩模式!");
-            }
+
             var temp3 = Item.StringToByte(temp2.ToString(true));
             count = temp3.Length / 3;
             var side = (int)Math.Ceiling(Math.Sqrt(count));
@@ -1184,32 +1082,10 @@ namespace FileToImage.Project
                 Base64._keyStr;
 
             var temp = "";
-            var check = "";
             var temp2 = new Dictionary<string, string>();
-            if (compressMode == CompressMode.NoCompress)
-            {
-                temp = Item.ReadFile(new FileInfo(file));
-                check = temp;
-                temp = Base64.Encode(temp, key);
-                while (temp.Length % 4 != 0)
-                {
-                    temp += "=";
-                }
-                temp2 = new Dictionary<string, string>()
-                {
-                    {"data",temp },
-                    {"fileName",Base64.Encode(file) },
-                    {"size",temp.Length.ToString() },
-                    {"code",coding.ToString() },
-                    {"compress",compressMode.ToString() },
-                    {"MD5",Item.MD5(Item.StringToByte(check)) },
-                    {"end","0" }//由于保存图片会有没有任何数据的结果,所以在字典上添加一个结尾标记
-                };
-            }
-            else if (compressMode == CompressMode.CLZF)
-            {
+            
                 var tempByte = Item.ReadFile(file);
-                tempByte = Item.Compress(tempByte);
+                tempByte = Item.Compress(tempByte,compressMode);
                 temp = Item.ByteToString(tempByte);
                 temp = Base64.Encode(temp, key);
                 while (temp.Length % 4 != 0)
@@ -1226,11 +1102,7 @@ namespace FileToImage.Project
                     {"MD5",Item.MD5(tempByte) },
                     {"end","0" }//由于保存图片会有没有任何数据的结果,所以在字典上添加一个结尾标记
                 };
-            }
-            else
-            {
-                throw new Exception("没有这种压缩模式!");
-            }
+            
             var temp3 = Item.StringToByte(temp2.ToString(true));
             count = temp3.Length / 3;
             var side = (int)Math.Ceiling(Math.Sqrt(count));
@@ -1632,7 +1504,7 @@ namespace FileToImage.Project
         /// <param name="project"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static Project Pause(this Project project,string value)
+        public static Project Pause(this Project project, string value)
         {
             switch (value)
             {
@@ -1647,12 +1519,18 @@ namespace FileToImage.Project
                 case "NaN":
                     return Project.NoInput;
                 case "BTF":
+                case "B2F":
                 case "BmpToFile":
+                case "Bmp2File":
                 case "bmpToFile":
+                case "bmp2File":
                     return Project.BmpToFile;
                 case "FTB":
+                case "F2B":
                 case "FileToBmp":
+                case "File2Bmp":
                 case "fileToBmp":
+                case "file2Bmp":
                     return Project.FileToBmp;
                 default:
                     return Project.NoInput;
