@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -23,6 +24,61 @@ namespace FileToImage.Project
         public static void OpenOnWindows(string web)
         {
             System.Diagnostics.Process.Start(web);
+        }
+
+        /// <summary>
+        /// 打开文件
+        /// </summary>
+        /// <param name="path"></param>
+        public static void OpenFile(string path)
+        {
+            var command = string.Format("explorer /select,{0}", path);
+            UseCmd(command);
+        }
+
+        /// <summary>
+        /// 使用cmd命令
+        /// </summary>
+        /// <param name="cmdCode"></param>
+        public static void UseCmd(string cmdCode)
+        {
+            System.Diagnostics.Process proIP = new System.Diagnostics.Process();
+            proIP.StartInfo.FileName = "cmd.exe";
+            proIP.StartInfo.UseShellExecute = false;
+            proIP.StartInfo.RedirectStandardInput = true;
+            proIP.StartInfo.RedirectStandardOutput = true;
+            proIP.StartInfo.RedirectStandardError = true;
+            proIP.StartInfo.CreateNoWindow = true;
+            proIP.Start();
+            proIP.StandardInput.WriteLine(cmdCode);
+            proIP.StandardInput.WriteLine("exit");
+            string strResult = proIP.StandardOutput.ReadToEnd();
+            Console.WriteLine(strResult);
+            proIP.Close();
+        }
+
+        /// <summary>
+        /// 使用cmd命令
+        /// </summary>
+        /// <param name="cmdCode"></param>
+        public static void UseCmd(params string[] cmdCodes)
+        {
+            Process proIP = new Process();
+            proIP.StartInfo.FileName = "cmd.exe";
+            proIP.StartInfo.UseShellExecute = false;
+            proIP.StartInfo.RedirectStandardInput = true;
+            proIP.StartInfo.RedirectStandardOutput = true;
+            proIP.StartInfo.RedirectStandardError = true;
+            proIP.StartInfo.CreateNoWindow = true;
+            proIP.Start();
+            foreach (var eachCmd in cmdCodes)
+            {
+                proIP.StandardInput.WriteLine(eachCmd);
+            }
+            proIP.StandardInput.WriteLine("exit");
+            string strResult = proIP.StandardOutput.ReadToEnd();
+            Console.WriteLine(strResult);
+            proIP.Close();
         }
 
         /// <summary>
@@ -653,7 +709,8 @@ namespace FileToImage.Project
                     downFile.Write(downValue, 0, downValue.Length);
                     downValue = null;//尝试释放内存
                     MessageBox.Show("解码完成!", "通知", MessageBoxButtons.OK);
-                    Item.OpenOnWindows(new FileInfo(img).DirectoryName);
+                    //Item.OpenOnWindows(new FileInfo(img).DirectoryName);
+                    Item.OpenFile(downFile.Name);
                     downFile.Dispose();
                     downFile.Close();
                 }
@@ -754,7 +811,8 @@ namespace FileToImage.Project
                 downFile.Write(downValue, 0, downValue.Length);
                 downValue = null;//尝试释放内存
                 MessageBox.Show("解码完成!", "通知", MessageBoxButtons.OK);
-                Item.OpenOnWindows(new FileInfo(img).DirectoryName);
+                //Item.OpenOnWindows(new FileInfo(img).DirectoryName);
+                Item.OpenFile(downFile.Name);
                 downFile.Dispose();
                 downFile.Close();
             }
@@ -854,7 +912,8 @@ namespace FileToImage.Project
                     downFile.Write(downValue, 0, downValue.Length);
                     downValue = null;//尝试释放内存
                     MessageBox.Show("解码完成!", "通知", MessageBoxButtons.OK);
-                    Item.OpenOnWindows(new FileInfo(img).DirectoryName);
+                    //Item.OpenOnWindows(new FileInfo(img).DirectoryName);
+                    Item.OpenFile(downFile.Name);
                     downFile.Dispose();
                     downFile.Close();
                 }
@@ -928,7 +987,9 @@ namespace FileToImage.Project
             bmp.UnlockBits(data);
             Item.BmpToJpgSave(bmp, file + ".EN.jpg");
             MessageBox.Show("文件加密完成!", "通知", MessageBoxButtons.OK);
-            Item.OpenOnWindows(new FileInfo(file).DirectoryName);
+            //Item.OpenOnWindows(new FileInfo(file).DirectoryName);
+            var filePath = file + ".EN.jpg";
+            Item.OpenFile(filePath);
             bmp.Dispose();
             return 100;
         }
@@ -992,7 +1053,9 @@ namespace FileToImage.Project
             bmp.UnlockBits(data);
             Item.BmpToJpgSave(bmp, file + ".EN.jpg");
             MessageBox.Show("文件加密完成!", "通知", MessageBoxButtons.OK);
-            Item.OpenOnWindows(new FileInfo(file).DirectoryName);
+            //Item.OpenOnWindows(new FileInfo(file).DirectoryName);
+            var filePath = file + ".EN.jpg";
+            Item.OpenFile(filePath);
             bmp.Dispose();
             return 100;
         }
@@ -1056,7 +1119,9 @@ namespace FileToImage.Project
             bmp.UnlockBits(data);
             Item.BmpToJpgSave(bmp, file + ".EN.jpg");
             MessageBox.Show("文件加密完成!", "通知", MessageBoxButtons.OK);
-            Item.OpenOnWindows(new FileInfo(file).DirectoryName);
+            //Item.OpenOnWindows(new FileInfo(file).DirectoryName);
+            var filePath = file + ".EN.jpg";
+            Item.OpenFile(filePath);
             bmp.Dispose();
             return 100;
         }
