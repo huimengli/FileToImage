@@ -5,6 +5,8 @@ using FileToImage.Project;
 using System.Text.RegularExpressions;
 using Microsoft.VisualBasic;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.ComponentModel;
 
 namespace FileToImage
 {
@@ -22,9 +24,9 @@ namespace FileToImage
         private static string message =
 @"
 —————————————————————————
-—　　　　　　　　文件和图片互转工具　　　　　　　　—
-—　　　　　　　　　　　　　　　　　　　　　　　　　—
-—　　　　　　　　　　　　　　　　　作者：绘梦璃　　—  
+—　　　　　　　文件和图片互转工具　　　　　　　—
+—　　　　　　　　　　　　　　　　　　　　　　　—
+—　　　　　　　　　　　　　　　作者：绘梦璃　　—  
 —————————————————————————
 
 -? -H -help 获取帮助
@@ -51,25 +53,77 @@ namespace FileToImage
 -KM No(没有加密)/SHA256(sha256加密)
 
 -CM 压缩模式(压缩不一定会让文件更小):
--CM No(没有压缩)/CLZF(CLZF压缩模式)
+-CM No(没有压缩),CLZF/Deflate/ZIP(压缩模式)
 
 —————————————————————————
 ";
+        #endregion
+
+        #region 调用CMD输出(已经用不上了)
+        //[DllImport("kernel32.dll")]
+        //static extern bool FreeConsole();
+        //[DllImport("kernel32.dll")]
+        //public static extern bool AllocConsole();
+        #endregion
+
+        #region 禁止显示CMD窗口
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool CloseHandle(IntPtr handle);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool FreeConsole();
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall, SetLastError = true)]
+        private static extern IntPtr GetStdHandle([MarshalAs(UnmanagedType.I4)]int nStdHandle);
+
+        // see the comment below
+        private enum StdHandle
+        {
+            StdIn = -10,
+            StdOut = -11,
+            StdErr = -12
+        };
+
+        /// <summary>
+        /// 禁止非控制台启动时显示CMD界面
+        /// </summary>
+        static void HideConsole()
+        {
+            var ptr = GetStdHandle((int)StdHandle.StdOut);
+            if (!CloseHandle(ptr))
+                throw new Win32Exception();
+
+            ptr = IntPtr.Zero;
+
+            if (!FreeConsole())
+                throw new Win32Exception();
+        }
         #endregion
 
         /// <summary>
         /// 应用程序的主入口点。
         /// </summary>
         [STAThread]
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             if (args.Length == 0)
             {
+                try
+                {
+                    HideConsole();//调试的时候运行此代码会报错
+                }
+                catch (Exception)
+                {
+                    
+                }
                 //防止多个工具同时运行
                 if (Process.GetProcessesByName(Process.GetCurrentProcess().ProcessName).Length > 1)
                 {
                     MessageBox.Show("程序已经在运行！", "警告", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
+                    return 0;
                 }
 #if DEBUG
                 //MessageBox.Show("DEBUG");
@@ -77,6 +131,7 @@ namespace FileToImage
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.Run(new Main());
+                return 0;
 #else
                 //MessageBox.Show("else");
                 //捕获全局异常
@@ -93,6 +148,7 @@ namespace FileToImage
                     Application.EnableVisualStyles();
                     Application.SetCompatibleTextRenderingDefault(false);
                     Application.Run(new Main());
+                    return 0;
                 }
                 catch (Exception err)
                 {
@@ -111,11 +167,14 @@ namespace FileToImage
 
                     MessageBox.Show(str, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     //MessageBox.Show("发生致命错误，请及时联系作者！", "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return 0;
                 }
 #endif
             }
             else
             {
+                //调用系统api
+                //AllocConsole();
                 //处理未捕获的异常模式
                 Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
                 //处理UI线程异常
@@ -147,8 +206,10 @@ namespace FileToImage
                         //帮助
                         if (temp == "?" || temp == "help")
                         {
-                            MessageBox.Show(message, "帮助", MessageBoxButtons.OK);
-                            return;
+                            //MessageBox.Show(message, "帮助", MessageBoxButtons.OK);
+                            //return message;
+                            Console.WriteLine(message);
+                            return 0;
                         }
                         //工作模式
                         else if (temp == "FTB" || temp == "fileToBmp")
@@ -160,7 +221,7 @@ namespace FileToImage
                             else
                             {
                                 MessageBox.Show("不能多次设定工作模式!", "错误", MessageBoxButtons.OK);
-                                return;
+                                return 404;
                             }
                         }
                         else if (temp == "BTF" || temp == "bmpToFile")
@@ -172,7 +233,7 @@ namespace FileToImage
                             else
                             {
                                 MessageBox.Show("不能多次设定工作模式!", "错误", MessageBoxButtons.OK);
-                                return;
+                                return 404;
                             }
                         }
                         //输入文件路径
@@ -240,7 +301,7 @@ namespace FileToImage
                 {
                     case Project.Project.NoInput:
                         MessageBox.Show("没有选择工具模式!", "错误", MessageBoxButtons.OK);
-                        return;
+                        return 404;
                     case Project.Project.FileToBmp:
                         if (string.IsNullOrEmpty(outpath))
                         {
@@ -250,7 +311,7 @@ namespace FileToImage
                         {
                             ret = Item.FileToBmp(inputpath, needkey, keyMode.GetValue(), keyValue, compressMode, outpath);
                         }
-                        return;
+                        break;
                     case Project.Project.BmpToFile:
                         if (string.IsNullOrEmpty(outpath))
                         {
@@ -260,12 +321,47 @@ namespace FileToImage
                         {
                             ret = Item.BmpToFile(inputpath, needkey, keyMode.GetValue(), keyValue, compressMode, outpath);
                         }
-                        return;
+                        break;
                     default:
                         MessageBox.Show("没有这个模式!", "错误", MessageBoxButtons.OK);
-                        return;
+                        break;
                 }
 
+                switch (ret)
+                {
+                    case 100:
+                        Console.WriteLine( "编码成功"); break;
+                    case 101:
+                        Console.WriteLine( "解码成功"); break;
+                    case 200:
+                        Console.WriteLine( "文件已经存在!"); break;
+                    case 300:
+                        Console.WriteLine( "编码方式错误!"); break;
+                    case 3000:
+                        Console.WriteLine( "编码方式错误!\n文件是用"+CodingMode.NoCoding.GetValue()+"方式编码的"); break;
+                    case 3001:
+                        Console.WriteLine( "编码方式错误!\n文件是用"+CodingMode.SHA256.GetValue()+"方式编码的"); break;
+                    case 3002:
+                        Console.WriteLine( "编码方式错误!\n文件是用"+CodingMode.MD5.GetValue()+"方式编码的"); break;
+                    case 301:
+                        Console.WriteLine( "压缩方式错误!"); break;
+                    case 3010:
+                        Console.WriteLine( "压缩方式错误!\n文件是用"+CompressMode.NoCompress.GetValue()+"方式压缩的"); break;
+                    case 3011:
+                        Console.WriteLine( "压缩方式错误!\n文件是用"+CompressMode.CLZF.GetValue()+"方式压缩的"); break;
+                    case 3012:
+                        Console.WriteLine( "压缩方式错误!\n文件是用"+CompressMode.ZIP.GetValue()+"方式压缩的"); break;
+                    case 3013:
+                        Console.WriteLine( "压缩方式错误!\n文件是用"+CompressMode.Deflate.GetValue()+"方式压缩的"); break;
+                    case 303:
+                        Console.WriteLine( "密码错误!"); break;
+                    
+                    default:
+                        Console.WriteLine( "未知错误!"); break;
+                }
+                //释放控制台
+                //FreeConsole();
+                return ret;
                 //}
                 //catch (Exception err)
                 //{

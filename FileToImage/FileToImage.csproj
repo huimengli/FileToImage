@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{6F6B2317-3D85-4412-96F6-27E5B2CA67E3}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <RootNamespace>FileToImage</RootNamespace>
     <AssemblyName>FileToImage</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>

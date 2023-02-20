@@ -727,7 +727,7 @@ namespace FileToImage.Project
             data = null;
             temp = null;
             //temp2 = null;
-            return 100;
+            return 101;
         }
 
         /// <summary>
@@ -744,7 +744,7 @@ namespace FileToImage.Project
         {
             if (File.Exists(outPath))
             {
-                MessageBox.Show("文件: " + outPath + " 已经存在!", "错误", MessageBoxButtons.OK);
+                //MessageBox.Show("文件: " + outPath + " 已经存在!", "错误", MessageBoxButtons.OK);
                 return 200;
             }
             var bmp = new Bitmap(img);
@@ -776,18 +776,20 @@ namespace FileToImage.Project
 
             if (values["code"] != coding.ToString())
             {
-                MessageBox.Show("选择编码方式错误!\n" + "文件是用 " + CodingMode.NoCoding.Pause(values["code"]).GetValue() + " 方式编码的!", "错误", MessageBoxButtons.OK);
+                //MessageBox.Show("选择编码方式错误!\n" + "文件是用 " + CodingMode.NoCoding.Pause(values["code"]).GetValue() + " 方式编码的!", "错误", MessageBoxButtons.OK);
                 CloseLoading();
                 GC.Collect();
-                return 300;
+                var ret = string.Format("300{0}", (int)CodingMode.NoCoding.Pause(values["code"]));
+                return int.Parse(ret);
             }
 
             if (values["compress"] != compressMode.ToString())
             {
-                MessageBox.Show("选择压缩方式错误!\n" + "文件是用 " + CompressMode.NoCompress.Pause(values["compress"]).GetValue() + " 方法压缩的!", "错误", MessageBoxButtons.OK);
+                //MessageBox.Show("选择压缩方式错误!\n" + "文件是用 " + CompressMode.NoCompress.Pause(values["compress"]).GetValue() + " 方法压缩的!", "错误", MessageBoxButtons.OK);
                 CloseLoading();
                 GC.Collect();
-                return 301;
+                var ret = string.Format("301{0}", (int)CompressMode.NoCompress.Pause(values["compress"]));
+                return int.Parse(ret);
             }
 
             var value = Base64.Decode(values["data"], key);
@@ -800,7 +802,7 @@ namespace FileToImage.Project
                 if (Item.MD5(downValue) != values["MD5"])
                 {
                     //Console.Write(values.ToString(true));
-                    MessageBox.Show("密码错误!", "错误", MessageBoxButtons.OK);
+                    //MessageBox.Show("密码错误!", "错误", MessageBoxButtons.OK);
                     CloseLoading();
                     GC.Collect();
                     return 303;
@@ -810,7 +812,7 @@ namespace FileToImage.Project
                 var downFile = File.Create(outPath);//nowImg.DirectoryName + "\\" + nowFile.Name);
                 downFile.Write(downValue, 0, downValue.Length);
                 downValue = null;//尝试释放内存
-                MessageBox.Show("解码完成!", "通知", MessageBoxButtons.OK);
+                //MessageBox.Show("解码完成!", "通知", MessageBoxButtons.OK);
                 //Item.OpenOnWindows(new FileInfo(img).DirectoryName);
                 Item.OpenFile(downFile.Name);
                 downFile.Dispose();
@@ -818,7 +820,7 @@ namespace FileToImage.Project
             }
             catch (InvalidCastException err)
             {
-                MessageBox.Show("密码错误!" + err.Message, "错误", MessageBoxButtons.OK);
+                //MessageBox.Show("密码错误!" + err.Message, "错误", MessageBoxButtons.OK);
                 return 303;
             }
 
@@ -827,7 +829,7 @@ namespace FileToImage.Project
             data = null;
             temp = null;
             //temp2 = null;
-            return 100;
+            return 101;
         }
 
         /// <summary>
@@ -871,18 +873,20 @@ namespace FileToImage.Project
 
             if (values["code"] != coding.ToString())
             {
-                MessageBox.Show("选择编码方式错误!\n" + "文件是用 " + CodingMode.NoCoding.Pause(values["code"]).GetValue() + " 方式编码的!", "错误", MessageBoxButtons.OK);
+                //MessageBox.Show("选择编码方式错误!\n" + "文件是用 " + CodingMode.NoCoding.Pause(values["code"]).GetValue() + " 方式编码的!", "错误", MessageBoxButtons.OK);
                 CloseLoading();
                 GC.Collect();
-                return 300;
+                var ret = string.Format("300{0}", (int)CodingMode.NoCoding.Pause(values["code"]));
+                return int.Parse(ret);
             }
 
             if (values["compress"] != compressMode.ToString())
             {
-                MessageBox.Show("选择压缩方式错误!\n" + "文件是用 " + CompressMode.NoCompress.Pause(values["compress"]).GetValue() + " 方法压缩的!", "错误", MessageBoxButtons.OK);
+                //MessageBox.Show("选择压缩方式错误!\n" + "文件是用 " + CompressMode.NoCompress.Pause(values["compress"]).GetValue() + " 方法压缩的!", "错误", MessageBoxButtons.OK);
                 CloseLoading();
                 GC.Collect();
-                return 301;
+                var ret = string.Format("301{0}", (int)CompressMode.NoCompress.Pause(values["compress"]));
+                return int.Parse(ret);
             }
 
             var value = Base64.Decode(values["data"], key);
@@ -892,7 +896,7 @@ namespace FileToImage.Project
                 var nowImg = new FileInfo(img);
                 if (File.Exists(nowImg.DirectoryName + "\\" + nowFile.Name))
                 {
-                    MessageBox.Show("文件: " + Base64.Decode(values["fileName"]) + " 已经存在!", "错误", MessageBoxButtons.OK);
+                    //MessageBox.Show("文件: " + Base64.Decode(values["fileName"]) + " 已经存在!", "错误", MessageBoxButtons.OK);
                     return 200;
                 }
                 else
@@ -901,7 +905,7 @@ namespace FileToImage.Project
                     if (Item.MD5(downValue) != values["MD5"])
                     {
                         //Console.Write(values.ToString(true));
-                        MessageBox.Show("密码错误!", "错误", MessageBoxButtons.OK);
+                        //MessageBox.Show("密码错误!", "错误", MessageBoxButtons.OK);
                         CloseLoading();
                         GC.Collect();
                         return 303;
@@ -911,7 +915,7 @@ namespace FileToImage.Project
                     var downFile = File.Create(nowImg.DirectoryName + "\\" + nowFile.Name);
                     downFile.Write(downValue, 0, downValue.Length);
                     downValue = null;//尝试释放内存
-                    MessageBox.Show("解码完成!", "通知", MessageBoxButtons.OK);
+                    //MessageBox.Show("解码完成!", "通知", MessageBoxButtons.OK);
                     //Item.OpenOnWindows(new FileInfo(img).DirectoryName);
                     Item.OpenFile(downFile.Name);
                     downFile.Dispose();
@@ -921,7 +925,7 @@ namespace FileToImage.Project
             }
             catch (InvalidCastException err)
             {
-                MessageBox.Show("密码错误!" + err.Message, "错误", MessageBoxButtons.OK);
+                //MessageBox.Show("密码错误!" + err.Message, "错误", MessageBoxButtons.OK);
                 return 303;
             }
 
@@ -930,7 +934,7 @@ namespace FileToImage.Project
             data = null;
             temp = null;
             //temp2 = null;
-            return 100;
+            return 101;
         }
 
         /// <summary>
@@ -944,6 +948,11 @@ namespace FileToImage.Project
         /// <returns></returns>
         public static int FileToBmp(string file, CheckBox checkBox1, ComboBox comboBox1, TextBox textBox1, CompressMode compressMode)
         {
+            if (File.Exists(file + ".EN.jpg"))
+            {
+                MessageBox.Show("文件: " + file + ".EN.jpg" + " 已经存在!", "错误", MessageBoxButtons.OK);
+                return 200;
+            }
             var count = file.Length;
             var coding = checkBox1.Checked ? CodingMode.NoCoding.Pause(comboBox1.Text) : CodingMode.NoCoding;
             var key = checkBox1.Checked == false ? Base64._keyStr :
@@ -1007,7 +1016,7 @@ namespace FileToImage.Project
         {
             if (File.Exists(file + ".EN.jpg"))
             {
-                MessageBox.Show("文件: " + file + ".EN.jpg" + " 已经存在!", "错误", MessageBoxButtons.OK);
+                //MessageBox.Show("文件: " + file + ".EN.jpg" + " 已经存在!", "错误", MessageBoxButtons.OK);
                 return 200;
             }
             var count = file.Length;
@@ -1052,7 +1061,7 @@ namespace FileToImage.Project
             Item.Base64ToBitmapData(ref data, temp3);
             bmp.UnlockBits(data);
             Item.BmpToJpgSave(bmp, file + ".EN.jpg");
-            MessageBox.Show("文件加密完成!", "通知", MessageBoxButtons.OK);
+            //MessageBox.Show("文件加密完成!", "通知", MessageBoxButtons.OK);
             //Item.OpenOnWindows(new FileInfo(file).DirectoryName);
             var filePath = file + ".EN.jpg";
             Item.OpenFile(filePath);
@@ -1073,7 +1082,7 @@ namespace FileToImage.Project
         {
             if (File.Exists(outPath))
             {
-                MessageBox.Show("文件: " + outPath + " 已经存在!", "错误", MessageBoxButtons.OK);
+                //MessageBox.Show("文件: " + outPath + " 已经存在!", "错误", MessageBoxButtons.OK);
                 return 200;
             }
             var count = file.Length;
@@ -1118,7 +1127,7 @@ namespace FileToImage.Project
             Item.Base64ToBitmapData(ref data, temp3);
             bmp.UnlockBits(data);
             Item.BmpToJpgSave(bmp, file + ".EN.jpg");
-            MessageBox.Show("文件加密完成!", "通知", MessageBoxButtons.OK);
+            //MessageBox.Show("文件加密完成!", "通知", MessageBoxButtons.OK);
             //Item.OpenOnWindows(new FileInfo(file).DirectoryName);
             var filePath = file + ".EN.jpg";
             Item.OpenFile(filePath);
