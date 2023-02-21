@@ -809,12 +809,15 @@ namespace FileToImage.Project
                 }
 
                 downValue = Item.Decompress(downValue, compressMode);
+                Console.WriteLine(outPath);
                 var downFile = File.Create(outPath);//nowImg.DirectoryName + "\\" + nowFile.Name);
                 downFile.Write(downValue, 0, downValue.Length);
                 downValue = null;//尝试释放内存
                 //MessageBox.Show("解码完成!", "通知", MessageBoxButtons.OK);
                 //Item.OpenOnWindows(new FileInfo(img).DirectoryName);
-                Item.OpenFile(downFile.Name);
+
+                //使用-OP参数时不会调用explorer
+                //Item.OpenFile(downFile.Name);
                 downFile.Dispose();
                 downFile.Close();
             }
@@ -1126,11 +1129,12 @@ namespace FileToImage.Project
 
             Item.Base64ToBitmapData(ref data, temp3);
             bmp.UnlockBits(data);
-            Item.BmpToJpgSave(bmp, file + ".EN.jpg");
+            //Item.BmpToJpgSave(bmp, file + ".EN.jpg");
+            Item.BmpToJpgSave(bmp, outPath);        //使用-OP参数时不会使用explorer
             //MessageBox.Show("文件加密完成!", "通知", MessageBoxButtons.OK);
             //Item.OpenOnWindows(new FileInfo(file).DirectoryName);
-            var filePath = file + ".EN.jpg";
-            Item.OpenFile(filePath);
+            //var filePath = file + ".EN.jpg";
+            //Item.OpenFile(filePath);
             bmp.Dispose();
             return 100;
         }
@@ -1193,6 +1197,19 @@ namespace FileToImage.Project
             pictureBox1.Image = bmp;
             label1.Visible = false;
             return 100;
+        }
+
+        /// <summary>
+        /// 打印有颜色的内容
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="color"></param>
+        public static void WriteColorLine(string str, ConsoleColor color)
+        {
+            ConsoleColor currentForeColor = Console.ForegroundColor;
+            Console.ForegroundColor = color;
+            Console.WriteLine(str);
+            Console.ForegroundColor = currentForeColor;
         }
     }
 

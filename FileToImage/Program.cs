@@ -34,6 +34,7 @@ namespace FileToImage
 -BTF -bmpToFile 图片转为文件
 -IP -inputPath -inputpath 输入文件路径
 -OP -outPath -outpath 输出文件路径(默认原路径)
+　　　　　　　(使用此参数时,不会调用explorer)
 -NK -needKey -needkey 需要密码(不输入:无)
 -KM -keyMode -keymode 加密模式(默认:无)
 -KV -keyValue -keyvalue 密码内容
@@ -57,6 +58,11 @@ namespace FileToImage
 
 —————————————————————————
 ";
+
+        /// <summary>
+        /// 是否是控制台模式
+        /// </summary>
+        private static bool IsConsoleMode = true;
         #endregion
 
         #region 调用CMD输出(已经用不上了)
@@ -111,6 +117,7 @@ namespace FileToImage
         {
             if (args.Length == 0)
             {
+                IsConsoleMode = false;
                 try
                 {
                     HideConsole();//调试的时候运行此代码会报错
@@ -189,6 +196,8 @@ namespace FileToImage
                 var keyMode = CodingMode.NoCoding;
                 var keyValue = "";
                 var compressMode = CompressMode.NoCompress;
+
+                var ret = 0;
 
                 //Console.WriteLine(args.ToString());
                 //MessageBox.Show(args.ToString(true));
@@ -270,7 +279,15 @@ namespace FileToImage
                         //压缩模式
                         else if (temp == "CM" || temp == "compressMode" || temp == "compressmode")
                         {
-                            compressMode = CompressMode.NoCompress.Pause(args[i + 1]);
+                            try
+                            {
+                                compressMode = CompressMode.NoCompress.Pause(args[i + 1]);
+                            }
+                            catch (Exception)
+                            {
+                                compressMode = CompressMode.NoCompress;
+                                Item.WriteColorLine("压缩模式输入错误!\n已经选择默认压缩模式",ConsoleColor.Red);
+                            }
                         }
                     }
                 }
@@ -279,7 +296,7 @@ namespace FileToImage
                 //如果缺少工作模式
                 while (project == Project.Project.NoInput)
                 {
-                    MessageBox.Show("工作模式错误!\n需要重新输入!", "错误", MessageBoxButtons.OK);
+                    Item.WriteColorLine("工作模式错误!\n需要重新输入!\n",ConsoleColor.Yellow);
                     temp = Interaction.InputBox("请输入工作模式!", "提示", "BTF/FTB");
                     project = Project.Project.NoInput.Pause(temp);
                 }
@@ -294,13 +311,12 @@ namespace FileToImage
                 }
                 #endregion
 
-                var ret = 0;
 
                 //运行功能
                 switch (project)
                 {
                     case Project.Project.NoInput:
-                        MessageBox.Show("没有选择工具模式!", "错误", MessageBoxButtons.OK);
+                        Item.WriteColorLine("没有选择功能!",ConsoleColor.Red);
                         return 404;
                     case Project.Project.FileToBmp:
                         if (string.IsNullOrEmpty(outpath))
@@ -323,41 +339,42 @@ namespace FileToImage
                         }
                         break;
                     default:
-                        MessageBox.Show("没有这个模式!", "错误", MessageBoxButtons.OK);
+                        Item.WriteColorLine("没有这个功能!",ConsoleColor.Red);
                         break;
                 }
 
                 switch (ret)
                 {
                     case 100:
-                        Console.WriteLine( "编码成功"); break;
+                        Item.WriteColorLine( "编码成功",ConsoleColor.Green); break;
                     case 101:
-                        Console.WriteLine( "解码成功"); break;
+                        Item.WriteColorLine( "解码成功", ConsoleColor.Green); break;
                     case 200:
-                        Console.WriteLine( "文件已经存在!"); break;
+                        Item.WriteColorLine( "文件已经存在!",ConsoleColor.Yellow); break;
                     case 300:
-                        Console.WriteLine( "编码方式错误!"); break;
+                        Item.WriteColorLine( "编码方式错误!",ConsoleColor.Red); break;
                     case 3000:
-                        Console.WriteLine( "编码方式错误!\n文件是用"+CodingMode.NoCoding.GetValue()+"方式编码的"); break;
+                        Item.WriteColorLine( "编码方式错误!\n文件是用"+CodingMode.NoCoding.GetValue()+"方式编码的",ConsoleColor.Yellow); break;
                     case 3001:
-                        Console.WriteLine( "编码方式错误!\n文件是用"+CodingMode.SHA256.GetValue()+"方式编码的"); break;
+                        Item.WriteColorLine( "编码方式错误!\n文件是用"+CodingMode.SHA256.GetValue()+"方式编码的",ConsoleColor.Yellow); break;
                     case 3002:
-                        Console.WriteLine( "编码方式错误!\n文件是用"+CodingMode.MD5.GetValue()+"方式编码的"); break;
+                        Item.WriteColorLine( "编码方式错误!\n文件是用"+CodingMode.MD5.GetValue()+"方式编码的",ConsoleColor.Yellow); break;
                     case 301:
-                        Console.WriteLine( "压缩方式错误!"); break;
+                        Item.WriteColorLine( "压缩方式错误!",ConsoleColor.Red); break;
                     case 3010:
-                        Console.WriteLine( "压缩方式错误!\n文件是用"+CompressMode.NoCompress.GetValue()+"方式压缩的"); break;
+                        Item.WriteColorLine( "压缩方式错误!\n文件是用"+CompressMode.NoCompress.GetValue()+"方式压缩的",ConsoleColor.Yellow); break;
                     case 3011:
-                        Console.WriteLine( "压缩方式错误!\n文件是用"+CompressMode.CLZF.GetValue()+"方式压缩的"); break;
+                        Item.WriteColorLine( "压缩方式错误!\n文件是用"+CompressMode.CLZF.GetValue()+"方式压缩的",ConsoleColor.Yellow); break;
                     case 3012:
-                        Console.WriteLine( "压缩方式错误!\n文件是用"+CompressMode.ZIP.GetValue()+"方式压缩的"); break;
+                        Item.WriteColorLine( "压缩方式错误!\n文件是用"+CompressMode.ZIP.GetValue()+"方式压缩的",ConsoleColor.Yellow); break;
                     case 3013:
-                        Console.WriteLine( "压缩方式错误!\n文件是用"+CompressMode.Deflate.GetValue()+"方式压缩的"); break;
+                        Item.WriteColorLine( "压缩方式错误!\n文件是用"+CompressMode.Deflate.GetValue()+"方式压缩的",ConsoleColor.Yellow); break;
                     case 303:
-                        Console.WriteLine( "密码错误!"); break;
-                    
+                        Item.WriteColorLine( "密码错误!",ConsoleColor.Red); break;
+                    case 404:
+                        Item.WriteColorLine("不能多次设定运行模式!",ConsoleColor.Red);break;
                     default:
-                        Console.WriteLine( "未知错误!"); break;
+                        Item.WriteColorLine( "未知错误!",ConsoleColor.Red); break;
                 }
                 //释放控制台
                 //FreeConsole();
@@ -393,7 +410,14 @@ namespace FileToImage
                 str = string.Format("应用程序线程错误:{0}", e);
             }
 
-            MessageBox.Show(str, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (IsConsoleMode)
+            {
+                Item.WriteColorLine("系统错误!", ConsoleColor.DarkRed);
+            }
+            else
+            {
+                MessageBox.Show(str, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
             //MessageBox.Show("发生致命错误，请及时联系作者！", "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
@@ -411,7 +435,14 @@ namespace FileToImage
                 str = string.Format("Application UnhandledError:{0}", e);
             }
 
-            MessageBox.Show(str, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (IsConsoleMode)
+            {
+                Item.WriteColorLine("系统错误!", ConsoleColor.DarkRed);
+            }
+            else
+            {
+                MessageBox.Show(str, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
             //MessageBox.Show("发生致命错误，请停止当前操作并及时联系作者！", "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
