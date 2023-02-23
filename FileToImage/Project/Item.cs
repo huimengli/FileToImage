@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace FileToImage.Project
@@ -17,6 +18,12 @@ namespace FileToImage.Project
     /// </summary>
     static class Item
     {
+        /// <summary>
+        /// 加法器
+        /// </summary>
+        /// <returns></returns>
+        delegate int SUM();
+
         /// <summary>
         /// 打开网站|其他东西
         /// </summary>
@@ -470,6 +477,24 @@ namespace FileToImage.Project
         }
 
         /// <summary>
+        /// 读取文件
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <returns></returns>
+        public static byte[] ReadFile(string file,int start,int end)
+        {
+            var theFile = new FileInfo(file);
+            using (var stream = theFile.OpenRead())
+            {
+                var ret = new byte[end - start];
+                stream.Read(ret, start, end);
+                return ret;
+            }
+        }
+
+        /// <summary>
         /// 将字节转为字符串
         /// </summary>
         /// <param name="bytes"></param>
@@ -658,6 +683,10 @@ namespace FileToImage.Project
                     temp2.Append((char)temp[i]);
                 }
             }
+#if DEBUG
+            MessageBox.Show(temp2.ToString());
+            Item.WriteColorLine(temp2.ToString(),ConsoleColor.Blue);
+#endif
             var values = temp2.ToString().ToDict();
             temp2 = null;
             var key = checkBox1.Checked == false ? Base64._keyStr :
@@ -1140,6 +1169,325 @@ namespace FileToImage.Project
         }
 
         /// <summary>
+        /// 文件编码(分步原版)
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="checkBox1"></param>
+        /// <param name="comboBox1"></param>
+        /// <param name="textBox1"></param>
+        /// <param name="compressMode"></param>
+        /// <param name="outPath"></param>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        public static int FileToBmpBase(string filePath, bool checkBox1, string comboBox1, string textBox1, CompressMode compressMode, string outPath,long size)
+        {
+            if (size==0)
+            {
+                return FileToBmp(filePath, checkBox1, comboBox1, textBox1, compressMode, outPath);
+            }
+            if (File.Exists(outPath))
+            {
+                return 200;
+            }
+            var count = filePath.Length;
+            var coding = checkBox1 ? CodingMode.NoCoding.Pause(comboBox1) : CodingMode.NoCoding;
+            var key = checkBox1 == false ? Base64._keyStr :
+                comboBox1 == "无" ? Base64._keyStr :
+                comboBox1 == "SHA256" ? Base64.GetKey(textBox1, CodingMode.SHA256) :
+                Base64._keyStr;
+
+            var temp = "";
+            Dictionary<string,string> temp2;
+            var file = new FileInfo(filePath);
+            var fileCount = file.Length;
+            Item.WriteColorLine(string.Format("文件大小:{0}", fileCount), ConsoleColor.Blue);
+            var readIndex = (int)Math.Ceiling((double)(fileCount / size));
+            Console.WriteLine(readIndex);
+            var md5s = new List<string>();
+            var tempByte = new byte[size];
+            double tempSizeCut = size / 4;
+            var saveSize = Math.Ceiling(tempSizeCut) * 4;   //记录数据每块大小,保证读取时正常
+            var saveLength = int.MaxValue;                  //记录数据编码完成后的最大值
+            
+            //记录添加的字节,用于计算Side
+            count = new SUM(() =>
+            {
+                double t = 4 + 2 +                                  //part
+                saveSize.ToString().Length +                        //每块的大小
+                4 + 2 +                                             //data
+                readIndex * saveSize +                              //数据保存大小
+                8 + 2 +                                             //fileName
+                Math.Ceiling((double)(file.Name.Length / 3)) * 4 +  //文件名大小
+                4 + 2 +                                             //size
+                saveLength.ToString().Length +                      //文件编码后大小(预计直接int最大值)
+                8 + 2 +                                             //compress
+                compressMode.ToString().Length +                    //压缩模式标记长度
+                3 + 2 +                                             //MD5
+                readIndex*33 +                                      //所有的签名(单个签名32位,加上分隔符33)
+                4 + 2 +                                             //end标记
+                20;                                                 //保留数据大小(防止意外)
+                return (int)Math.Ceiling(t);
+            })();
+
+            count = count / 3;                                      //一个像素可以保存三个字节
+            var side = (int)Math.Ceiling(Math.Sqrt(count));         //计算side
+            Item.WriteColorLine(string.Format("SIDE大小:{0}", side), ConsoleColor.Blue);
+
+            var bmp = new Bitmap(side, side);
+            var data = bmp.LockBits(new Rectangle(0, 0, side, side),
+                System.Drawing.Imaging.ImageLockMode.ReadWrite,
+                bmp.PixelFormat);
+            var ptr = data.Scan0;
+            
+            using (var readStream = file.OpenRead())
+            {
+                readIndex = 0;
+                saveLength = 0;
+                //分步操作,需要在图片最开头写入分块大小.
+                temp = string.Format("{0}:{1};data:", "part",saveSize);
+                tempByte = Item.StringToByte(temp);
+                var tempCount = (int)Math.Ceiling(tempByte.Length / 3d) * 4;          //循环临时参数(count)
+                var temp3 = new byte[tempCount];
+                var j = 0;
+                for (int i = 0; i < tempCount; i++)
+                {
+                    if (i%4==3)
+                    {
+                        temp3[i] = 255;
+                    }
+                    else
+                    {
+                        temp3[i] = tempByte.GetItem(j++);
+                    }
+                }
+                //将已经处理好的数据直接通过内存操作放置到需要的位置
+                Marshal.Copy(temp3, saveLength, ptr, tempCount);
+                saveLength += tempCount;
+
+                while (readIndex * size < fileCount)
+                {
+                    readStream.Read(tempByte, (readIndex++) * (int)size, readIndex * (int)size);
+                    tempByte = Item.Compress(tempByte, compressMode);
+                    md5s.Add(Item.MD5(tempByte));
+                    temp = Item.ByteToString(tempByte);
+                    temp = Base64.Encode(temp, key);
+                    tempByte = Item.StringToByte(temp);
+
+                    //因为是分步操作,所以不能直接使用Base64ToBitmapData,需要在这里重写这个模块
+                    tempCount = (int)Math.Ceiling(tempByte.Length / 3d) * 4;
+                    temp3 = readIndex == 1 ? new byte[tempCount] : temp3.Fill((byte)0);//就第一次的时候开辟空间,其他时候都用fill填充0
+                    j = 0;
+                    for (int i = 0; i < tempCount; i++)
+                    {
+                        temp3[i] = (i % 4 == 3) ? byte.MaxValue : tempByte.GetItem(j++);
+                    }
+                    //将已经处理好的数据直接通过内存操作放置到需要的位置
+                    Marshal.Copy(temp3, saveLength, ptr, tempCount);
+                    saveLength += tempCount;
+                }
+                //由于分步操作,所以这里字典不需要记录data数据块
+                temp2 = new Dictionary<string, string>()
+                {
+                    {"fileName",Base64.Encode(file.Name) },
+                    {"size",fileCount.ToString() },
+                    {"code",coding.ToString() },
+                    {"compress",compressMode.ToString() },
+                    {"MD5",md5s.Join("/") },
+                    {"end","0" }//由于保存图片会有没有任何数据的结果,所以在字典上添加一个结尾标记
+                };
+
+                tempByte = StringToByte(string.Format(";{0}", temp2.ToString(true)));
+                tempCount = (int)Math.Ceiling(tempByte.Length / 3d) * 4;
+                temp3 = new byte[tempCount];
+                j = 0;
+                for (int i = 0; i < tempCount; i++)
+                {
+                    temp3[i] = (i % 4 == 3) ? byte.MaxValue : tempByte.GetItem(j++);
+                }
+                //将已经处理好的数据直接通过内存操作放置到需要的位置
+                Marshal.Copy(temp3, saveLength, ptr, tempCount);
+                saveLength += tempCount;
+                //解锁内存
+                bmp.UnlockBits(data);
+                Item.BmpToJpgSave(bmp, outPath);        //使用-OP参数时不会使用explorer
+                bmp.Dispose();
+                return 100;
+            }
+        }
+
+        /// <summary>
+        /// 文件编码
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="checkBox1"></param>
+        /// <param name="comboBox1"></param>
+        /// <param name="textBox1"></param>
+        /// <param name="compressMode"></param>
+        /// <param name="outPath"></param>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        public static int FileToBmp(string filePath, bool checkBox1, string comboBox1, string textBox1, CompressMode compressMode, string outPath,long size)
+        {
+            if (size==0)
+            {
+                return FileToBmp(filePath, checkBox1, comboBox1, textBox1, compressMode, outPath);
+            }
+            if (File.Exists(outPath))
+            {
+                return 200;
+            }
+            var count = filePath.Length;
+            var coding = checkBox1 ? CodingMode.NoCoding.Pause(comboBox1) : CodingMode.NoCoding;
+            var key = checkBox1 == false ? Base64._keyStr :
+                comboBox1 == "无" ? Base64._keyStr :
+                comboBox1 == "SHA256" ? Base64.GetKey(textBox1, CodingMode.SHA256) :
+                Base64._keyStr;
+
+            var temp = "";
+            Dictionary<string,string> temp2;
+            var file = new FileInfo(filePath);
+            var fileCount = file.Length;
+            Item.WriteColorLine(string.Format("文件大小:{0}", fileCount), ConsoleColor.Blue);
+            var readIndex = (int)Math.Ceiling((double)(fileCount / size));
+            Console.WriteLine(readIndex);
+            var md5s = new List<string>();
+            var tempByte = new byte[size];
+            double tempSizeCut = size / 4;
+            var saveSize = Math.Ceiling(tempSizeCut) * 4;   //记录数据每块大小,保证读取时正常
+            var saveLength = int.MaxValue;                  //记录数据编码完成后的最大值
+            
+            //记录添加的字节,用于计算Side
+            count = new SUM(() =>
+            {
+                double t = 4 + 2 +                                  //part
+                saveSize.ToString().Length +                        //每块的大小
+                4 + 2 +                                             //data
+                readIndex * saveSize * 3 +                          //数据保存大小
+                8 + 2 +                                             //fileName
+                Math.Ceiling((double)(file.Name.Length / 3)) * 4 +  //文件名大小
+                4 + 2 +                                             //size
+                saveLength.ToString().Length +                      //文件编码后大小(预计直接int最大值)
+                4 + 2 +                                             //code
+                coding.ToString().Length +                          //加密标记长度
+                8 + 2 +                                             //compress
+                compressMode.ToString().Length +                    //压缩模式标记长度
+                3 + 2 +                                             //MD5
+                readIndex*33 +                                      //所有的签名(单个签名32位,加上分隔符33)
+                4 + 2 +                                             //end标记
+                20;                                                 //保留数据大小(防止意外)
+                return (int)Math.Ceiling(t);
+            })();
+            MessageBox.Show(count.ToString());
+            count = (int)Math.Floor(count / 3d * 4);
+            var temp3 = new byte[count];
+            var temp3Index = 0;
+
+            count = count / 3;                                      //一个像素可以保存三个字节
+            
+
+            using (var readStream = file.OpenRead())
+            {
+                readIndex = 0;
+                saveLength = 0;
+                //分步操作,需要在图片最开头写入分块大小.
+                temp = string.Format("{0}:{1};data:", "part",saveSize);
+                tempByte = Item.StringToByte(temp);
+                //var tempCount = (int)Math.Ceiling(tempByte.Length / 3d) * 4;          //循环临时参数(count)
+                var tempCount = (int)Math.Floor(tempByte.Length / 3d * 4);          //循环临时参数(count)
+                var j = 0;
+                for (int i = 0; i < tempCount; i++)
+                {
+                    temp3[temp3Index] = (temp3Index++ % 4 == 3) ? byte.MaxValue : tempByte.GetItem(j++);
+                }
+                //将已经处理好的数据直接通过内存操作放置到需要的位置
+                //Marshal.Copy(temp3, saveLength, ptr, tempCount);
+                saveLength += tempCount;
+
+                while (readIndex * size < fileCount)
+                {
+                    tempByte = new byte[size];
+                    readStream.Read(tempByte, 0, (int)size);
+                    readIndex++;
+                    tempByte = Item.Compress(tempByte, compressMode);
+                    md5s.Add(Item.MD5(tempByte));
+                    temp = Item.ByteToString(tempByte);
+                    temp = Base64.Encode(temp, key);
+                    tempByte = Item.StringToByte(temp);
+
+                    //因为是分步操作,所以不能直接使用Base64ToBitmapData,需要在这里重写这个模块
+                    tempCount = (int)Math.Floor(tempByte.Length / 3d * 4);
+                    //temp3 = readIndex == 1 ? new byte[tempCount] : temp3.Fill((byte)0);//就第一次的时候开辟空间,其他时候都用fill填充0
+                    j = 0;
+                    for (int i = 0; i < tempCount; i++)
+                    {
+                        try
+                        {
+                            temp3[temp3Index] = (temp3Index++ % 4 == 3) ? byte.MaxValue : tempByte.GetItem(j++);
+                        }
+                        catch (Exception)
+                        {
+                            Item.WriteColorLine(Item.ByteToString(temp3), ConsoleColor.Blue);
+                            throw;
+                        }
+                    }
+                    //将已经处理好的数据直接通过内存操作放置到需要的位置
+                    //Marshal.Copy(temp3, saveLength, ptr, tempCount);
+                    saveLength += tempCount;
+                }
+                //由于分步操作,所以这里字典不需要记录data数据块
+                temp2 = new Dictionary<string, string>()
+                {
+                    {"fileName",Base64.Encode(file.Name) },
+                    {"size",fileCount.ToString() },
+                    {"code",coding.ToString() },
+                    {"compress",compressMode.ToString() },
+                    {"MD5",md5s.Join("/") },
+                    {"end","0" }//由于保存图片会有没有任何数据的结果,所以在字典上添加一个结尾标记
+                };
+
+                tempByte = StringToByte(string.Format(";{0}", temp2.ToString(true)));
+                tempCount = (int)Math.Floor(tempByte.Length / 3d * 4);
+                //temp3 = new byte[tempCount];
+                j = 0;
+                for (int i = 0; i < tempCount; i++)
+                {
+                    try
+                    {
+                        temp3[temp3Index] = (temp3Index++ % 4 == 3) ? byte.MaxValue : tempByte.GetItem(j++);
+                    }
+                    catch (Exception)
+                    {
+                        Item.WriteColorLine(Item.ByteToString(temp3), ConsoleColor.Blue);
+                        throw;
+                    }                  
+                }
+                saveLength += tempCount;
+                count = saveLength / 3;
+                //因为这里实际上已经将全部内容读取并存储在内存里了,所以可以将side计算拖到后面来
+                var side = (int)Math.Ceiling(Math.Sqrt(count));         //计算side
+                Item.WriteColorLine(string.Format("SIDE大小:{0}", side), ConsoleColor.Blue);
+
+                var bmp = new Bitmap(side, side);
+                var data = bmp.LockBits(new Rectangle(0, 0, side, side),
+                    System.Drawing.Imaging.ImageLockMode.ReadWrite,
+                    bmp.PixelFormat);
+                var ptr = data.Scan0;
+                //将已经处理好的数据直接通过内存操作放置到需要的位置
+                //Marshal.Copy(temp3, saveLength, ptr, tempCount);
+                
+                Marshal.Copy(temp3, 0, ptr, saveLength);
+                //Item.WriteColorLine(Item.ByteToString(temp3), ConsoleColor.Blue);
+                //throw new Exception();
+                saveLength += tempCount;
+                //解锁内存
+                bmp.UnlockBits(data);
+                Item.BmpToJpgSave(bmp, outPath);        //使用-OP参数时不会使用explorer
+                bmp.Dispose();
+                return 100;
+            }
+        }
+
+        /// <summary>
         /// 文件编码后显示
         /// </summary>
         /// <param name="img">图片所在路径</param>
@@ -1211,6 +1559,8 @@ namespace FileToImage.Project
             Console.WriteLine(str);
             Console.ForegroundColor = currentForeColor;
         }
+
+        
     }
 
     /// <summary>
@@ -1540,6 +1890,90 @@ namespace FileToImage.Project
             {
                 return objects.ToString();
             }
+        }
+
+        /// <summary>
+        /// 将列表转为字符串
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ts"></param>
+        /// <param name="tf"></param>
+        /// <returns></returns>
+        public static string ToString<T>(this List<T> ts,bool tf)
+        {
+            if (tf==false)
+            {
+                return ts.ToString();
+            }
+            else
+            {
+                var ret = "List<" + typeof(T).ToString()+"> ";
+                ret += "[" + ts.Count + "] { ";
+                for (int i = 0; i < ts.Count; i++)
+                {
+                    ret += ts[i].ToString();
+                    if (i < ts.Count - 1)
+                    {
+                        ret += ", ";
+                    }
+                }
+                ret += " }";
+                return ret;
+            }
+        }
+
+        /// <summary>
+        /// 连接
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ts"></param>
+        /// <param name="add"></param>
+        /// <returns></returns>
+        public static string Join<T>(this List<T> ts,string add)
+        {
+            var ret = new StringBuilder();
+            for (int i = 0; i < ts.Count -1; i++)
+            {
+                ret.Append(ts[i]);
+                ret.Append(add);
+            }
+            ret.Append(ts[ts.Count - 1]);
+            return ret.ToString();
+        }
+
+        /// <summary>
+        /// 连接
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ts"></param>
+        /// <param name="add"></param>
+        /// <returns></returns>
+        public static string Join<T>(this T[] ts,string add)
+        {
+            var ret = new StringBuilder();
+            for (int i = 0; i < ts.Length - 1; i++)
+            {
+                ret.Append(ts[i]);
+                ret.Append(add);
+            }
+            ret.Append(ts[ts.Length - 1]);
+            return ret.ToString();
+        }
+
+        /// <summary>
+        /// 填充
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name=""></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static T[] Fill<T>(this T[] ts,T value)
+        {
+            for (int i = 0; i < ts.Length; i++)
+            {
+                ts[i] = value;
+            }
+            return ts;
         }
     }
 

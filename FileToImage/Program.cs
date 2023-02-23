@@ -7,6 +7,9 @@ using Microsoft.VisualBasic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.ComponentModel;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace FileToImage
 {
@@ -40,6 +43,7 @@ namespace FileToImage
 -KV -keyValue -keyvalue 密码内容
 -P -password 密码(等同于-NK -KM SHA256 -KV)
 -CM -compressMode -compressmode 压缩模式(默认:无)
+-S -size 启用分块,用于减少转化大文件时内存占用
 
 —————————————————————————
 
@@ -118,14 +122,16 @@ namespace FileToImage
             if (args.Length == 0)
             {
                 IsConsoleMode = false;
+#if !DEBUG
                 try
                 {
                     HideConsole();//调试的时候运行此代码会报错
                 }
                 catch (Exception)
                 {
-                    
-                }
+
+                } 
+#endif
                 //防止多个工具同时运行
                 if (Process.GetProcessesByName(Process.GetCurrentProcess().ProcessName).Length > 1)
                 {
@@ -196,6 +202,7 @@ namespace FileToImage
                 var keyMode = CodingMode.NoCoding;
                 var keyValue = "";
                 var compressMode = CompressMode.NoCompress;
+                var size = -1;
 
                 var ret = 0;
 
@@ -220,6 +227,27 @@ namespace FileToImage
                             Console.WriteLine(message);
                             return 0;
                         }
+#if DEBUG
+                        //测试
+                        else if (temp == "test" || temp == "T")
+                        {
+                            //var tempStr = new StringBuilder();
+                            //for (int x = 0; x < 10; x++)
+                            //{
+                            //    tempStr.Append(i);
+                            //    Console.WriteLine(i);
+                            //    Console.WriteLine(Base64.Encode(tempStr.ToString()));
+                            //}
+
+                            //测试填充速度
+                            var tempByte = new byte[100000];
+                            var t1 = DateTime.Now;
+                            tempByte.Fill((byte)12);
+                            var t2 = DateTime.Now;
+                            Console.WriteLine(t2.ToFileTime() - t1.ToFileTime());
+                            return 0;
+                        } 
+#endif
                         //工作模式
                         else if (temp == "FTB" || temp == "fileToBmp")
                         {
@@ -238,6 +266,30 @@ namespace FileToImage
                             if (project == Project.Project.NoInput)
                             {
                                 project = Project.Project.BmpToFile;
+                            }
+                            else
+                            {
+                                MessageBox.Show("不能多次设定工作模式!", "错误", MessageBoxButtons.OK);
+                                return 404;
+                            }
+                        }
+                        else if (temp == "FTBW" || temp == "fileToBmpWait")
+                        {
+                            if (project == Project.Project.NoInput)
+                            {
+                                project = Project.Project.FileToBmpWait;
+                            }
+                            else
+                            {
+                                MessageBox.Show("不能多次设定工作模式!", "错误", MessageBoxButtons.OK);
+                                return 404;
+                            }
+                        }
+                        else if (temp == "BTFW" || temp == "bmpToFileWati")
+                        {
+                            if (project == Project.Project.NoInput)
+                            {
+                                project = Project.Project.BmpToFileWait;
                             }
                             else
                             {
@@ -289,6 +341,24 @@ namespace FileToImage
                                 Item.WriteColorLine("压缩模式输入错误!\n已经选择默认压缩模式",ConsoleColor.Red);
                             }
                         }
+                        //分块大小
+                        else if (temp == "S"||temp =="size")
+                        {
+                            size = int.Parse(args[i + 1]);
+                            switch (project)
+                            {
+                                case Project.Project.NoInput:
+                                    break;
+                                case Project.Project.FileToBmp:
+                                    project = Project.Project.FileToBmpWait;
+                                    break;
+                                case Project.Project.BmpToFile:
+                                    project = Project.Project.BmpToFileWait;
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
                     }
                 }
 
@@ -338,6 +408,20 @@ namespace FileToImage
                             ret = Item.BmpToFile(inputpath, needkey, keyMode.GetValue(), keyValue, compressMode, outpath);
                         }
                         break;
+                    case Project.Project.FileToBmpWait:
+                        if (string.IsNullOrEmpty(outpath))
+                        {
+                            ret = 401;
+                        }
+                        else if (size<0)
+                        {
+                            ret = 402;
+                        }
+                        else
+                        {
+                            ret = Item.FileToBmp(inputpath, needkey, keyMode.GetValue(), keyValue, compressMode, outpath,size);
+                        }
+                        break;
                     default:
                         Item.WriteColorLine("没有这个功能!",ConsoleColor.Red);
                         break;
@@ -371,6 +455,10 @@ namespace FileToImage
                         Item.WriteColorLine( "压缩方式错误!\n文件是用"+CompressMode.Deflate.GetValue()+"方式压缩的",ConsoleColor.Yellow); break;
                     case 303:
                         Item.WriteColorLine( "密码错误!",ConsoleColor.Red); break;
+                    case 401:
+                        Item.WriteColorLine("使用分步式必须输入-OP(输出位置)参数!", ConsoleColor.Red); break;
+                    case 402:
+                        Item.WriteColorLine("使用分步式必须输入-S(分块大小)参数!", ConsoleColor.Red); break;
                     case 404:
                         Item.WriteColorLine("不能多次设定运行模式!",ConsoleColor.Red);break;
                     default:

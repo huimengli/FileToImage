@@ -28,7 +28,15 @@ namespace FileToImage.Project
         /// </summary>
         BmpToFile,
 
+        /// <summary>
+        /// 分步式将文件转为图片
+        /// </summary>
+        FileToBmpWait,
 
+        /// <summary>
+        /// 分步式将图片转为文件
+        /// </summary>
+        BmpToFileWait,
     }
 
     /// <summary>
