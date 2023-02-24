@@ -428,10 +428,6 @@ namespace FileToImage
                         {
                             ret = 401;
                         }
-                        else if (size<0)
-                        {
-                            ret = 402;
-                        }
                         else
                         {
                             //ret = Item.FileToBmpBase2(inputpath, needkey, keyMode.GetValue(), keyValue, compressMode, outpath,size);

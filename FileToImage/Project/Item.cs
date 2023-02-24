@@ -1010,13 +1010,18 @@ namespace FileToImage.Project
                 var tempByte = new byte[4 + 2 + int.MaxValue.ToString().Length];
                 imgFile.Read(tempByte, 0, tempByte.Length);
                 var temp = Encoding.UTF8.GetString(tempByte);
-                Console.WriteLine(temp);
+#if DEBUG
+                Console.WriteLine(temp); 
+#endif
                 var temp2 = temp.ToDict();
-                long size = long.Parse(temp2["part"]);
+                int headSize = int.Parse(temp2["head"]);
                 temp = temp2.ToString(true);
 
-                imgFile.Position = ICONLENGTH + temp.Length + 6;
-                var readByte = new byte[size];
+                imgFile.Position = ICONLENGTH + temp.Length + 1;
+                tempByte = new byte[headSize];
+                imgFile.Read(tempByte, 0, tempByte.Length);
+                temp = Encoding.UTF8.GetString(tempByte);
+                temp2 = temp.ToDict();
 
                 var coding = checkBox1 ? comboBox1 : CodingMode.NoCoding;
                 var key = "";
@@ -1033,19 +1038,64 @@ namespace FileToImage.Project
                         key = MD5("");
                         break;
                 }
-                var VI = Encoding.UTF8.GetBytes(MD5(key)).Separate(2);
+                var IV = Encoding.UTF8.GetBytes(MD5(key)).Separate(2);
+                var ret = 100;
 
-                var readIndex = 0;
-                var md5s = new List<string>();
+                if (temp2["code"] != coding.ToString())
+                {
+                    GC.Collect();
+                    ret = string.Format("300{0}", (int)CodingMode.NoCoding.Pause(temp2["code"])).ToInt();
+                    return ret;
+                }
+
+                if (temp2["compress"] != compressMode.ToString())
+                {
+                    GC.Collect();
+                    ret = string.Format("301{0}", (int)CompressMode.NoCompress.Pause(temp2["compress"])).ToInt();
+                    return ret;
+                }
+
+                var md5s = temp2["MD5"].Split('/');
+                var eachPartSize = temp2["eachPartSize"].Split('/').ToInt();
 
                 //开始解密
                 using (var outFile = File.Create(outPath))
                 {
+                    imgFile.Position+=6;                         //;data:
+                    string md5;
+                    for (int i = 0; i < eachPartSize.Length; i++)
+                    {
+                        tempByte = new byte[eachPartSize[i]];
+                        imgFile.Read(tempByte, 0, tempByte.Length);
+                        //先进行解密
+                        try
+                        {
+                            tempByte = AES.Decrypt(tempByte, key, IV);
+                        }
+                        catch (Exception)
+                        {
+                            ret = 303;
+                            break;
+                        }
+                        md5 = MD5(tempByte);
+                        if (md5!=md5s[i])
+                        {
+                            ret = 303;
+                        }
+                        //再解压
+                        tempByte = Item.Decompress(tempByte, compressMode);
+                        //再将内容写入解码文件
+                        outFile.Write(tempByte, 0, tempByte.Length);
+                    }
+                }
 
-                } 
+                GC.Collect();
+                if (ret>=300)
+                {
+                    File.Delete(outPath);
+                }
+                return ret;
             }
-
-            return 405;
         }
 
         /// <summary>
@@ -1304,8 +1354,11 @@ namespace FileToImage.Project
 #if DEBUG
                 Item.WriteColorLine(string.Format("文件大小:{0}", fileCount), ConsoleColor.Blue);
 #endif
+                size = size > fileCount ? fileCount : size;     //处理size大小,防止造成aes浪费
                 var readIndex = (int)Math.Ceiling((double)(fileCount / size));//此参数用于显示读取位置,在最开始时候显示分块
                 Console.WriteLine(string.Format("文件分块数量:{0}", readIndex));
+
+                var eachPartSize = new List<int>();             //每块大小
                 var md5s = new List<string>();                  //每块签名
                 var readPart = new byte[size];                  //读取使用的字节块,防止重复分配
                 double tempSizeCut = size / 4;                  //
@@ -1316,27 +1369,33 @@ namespace FileToImage.Project
                 using (var readStream = file.OpenRead())
                 {
                     readIndex = 0;
-                    //分步操作,需要在内容开始写入分块大小
-                    temp = string.Format("{0}:{1};data:", "part", saveSize);
-                    tempByte = Item.StringToByte(temp);
+                    ////分步操作,需要在内容开始写入分块大小
+                    //temp = string.Format("{0}:{1};data:", "part", saveSize);
+                    //tempByte = Item.StringToByte(temp);
 
-                    //不需要处理,直接写入文件
-                    outFile.Write(tempByte, 0, tempByte.Length);
+                    ////不需要处理,直接写入文件
+                    //outFile.Write(tempByte, 0, tempByte.Length);
 
-                    while (readIndex++ * size < fileCount)
+                    //先将文件读取加密写入临时文件中
+                    using (var tempFile = File.Create(TEMPFILE))
                     {
-                        readStream.Read(readPart, 0, (int)size);
-                        tempByte = Item.Compress(readPart, compressMode);
-                        md5s.Add(Item.MD5(tempByte));
-                        //进行AES加密
-                        tempByte = AES.Encrypt(tempByte, key, VI);
-                        //写入文件
-                        outFile.Write(tempByte, 0, tempByte.Length);
+                        while (readIndex++ * size < fileCount)
+                        {
+                            readStream.Read(readPart, 0, (int)size);
+                            tempByte = Item.Compress(readPart, compressMode);
+                            md5s.Add(Item.MD5(tempByte));
+                            //进行AES加密
+                            tempByte = AES.Encrypt(tempByte, key, VI);
+                            eachPartSize.Add(tempByte.Length);
+                            //写入临时文件
+                            tempFile.Write(tempByte, 0, tempByte.Length);
+                        }
                     }
-
                     //由于分步操作,所以这里字典不需要记录data数据块
                     temp2 = new Dictionary<string, string>()
                     {
+                        {"partNumber",(readIndex-1).ToString() },
+                        {"eachPartSize",eachPartSize.Join("/") },
                         {"fileName",Base64.Encode(file.Name) },
                         {"size",fileCount.ToString() },
                         {"code",coding.ToString() },
@@ -1344,9 +1403,17 @@ namespace FileToImage.Project
                         {"MD5",md5s.Join("/") },
                         {"end","0" }//由于习惯原因,给结尾填上一个标记
                     };
-                    tempByte = StringToByte(string.Format(";{0}", temp2.ToString(true)));
-                    //将其他数据写入文件
+                    temp = temp2.ToString(true);
+                    tempByte = StringToByte(string.Format("head:{0};{1};data:",temp.Length,temp));
+                    //将数据写入文件
                     outFile.Write(tempByte, 0, tempByte.Length);
+                    //将临时文件中的数据读取并写入文件
+                    using (var tempFile = new FileInfo(TEMPFILE).OpenRead())
+                    {
+                        tempFile.CopyTo(outFile);
+                    }
+                    //删除临时文件
+                    File.Delete(TEMPFILE);
                 }
                 return 100;
             }
@@ -2208,6 +2275,31 @@ namespace FileToImage.Project
                 rets[i % groubNumber].Add(ts[i]);
             }
             return rets[group].ToArray();
+        }
+
+        /// <summary>
+        /// 转为INT32
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static int ToInt(this string str)
+        {
+            return int.Parse(str);
+        }
+
+        /// <summary>
+        /// 转为INT32数组
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static int[] ToInt(this string[] str)
+        {
+            var ret = new int[str.Length];
+            for (int i = 0; i < str.Length; i++)
+            {
+                ret[i] = str[i].ToInt();
+            }
+            return ret;
         }
     }
 
