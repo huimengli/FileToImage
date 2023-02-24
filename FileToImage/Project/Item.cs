@@ -25,6 +25,21 @@ namespace FileToImage.Project
         delegate int SUM();
 
         /// <summary>
+        /// ICON大小
+        /// </summary>
+        private static int ICONLENGTH = 16958;
+
+        /// <summary>
+        /// 内容开始标记(未确定,是否要使用这个)
+        /// </summary>
+        private static string STARTMARK = "###StartMark###";
+
+        /// <summary>
+        /// 临时存储文件
+        /// </summary>
+        private static string TEMPFILE = "tempSave.file";
+
+        /// <summary>
         /// 打开网站|其他东西
         /// </summary>
         /// <param name="web">网址|地址</param>
@@ -483,7 +498,7 @@ namespace FileToImage.Project
         /// <param name="start"></param>
         /// <param name="end"></param>
         /// <returns></returns>
-        public static byte[] ReadFile(string file,int start,int end)
+        public static byte[] ReadFile(string file, int start, int end)
         {
             var theFile = new FileInfo(file);
             using (var stream = theFile.OpenRead())
@@ -685,7 +700,7 @@ namespace FileToImage.Project
             }
 #if DEBUG
             MessageBox.Show(temp2.ToString());
-            Item.WriteColorLine(temp2.ToString(),ConsoleColor.Blue);
+            Item.WriteColorLine(temp2.ToString(), ConsoleColor.Blue);
 #endif
             var values = temp2.ToString().ToDict();
             temp2 = null;
@@ -970,6 +985,70 @@ namespace FileToImage.Project
         }
 
         /// <summary>
+        /// 图片解码(尝试不经过base64编码)
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="checkBox1"></param>
+        /// <param name="comboBox1"></param>
+        /// <param name="textBox1"></param>
+        /// <param name="compressMode"></param>
+        /// <param name="outPath"></param>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        public static int BmpToFile(string img, bool checkBox1, CodingMode comboBox1, string textBox1, CompressMode compressMode, string outPath)
+        {
+            if (File.Exists(outPath))
+            {
+                return 200;
+            }
+
+            using (var imgFile = new FileInfo(img).OpenRead())
+            {
+                imgFile.Position = ICONLENGTH;
+
+                var reader = new StreamReader(imgFile);
+                var tempByte = new byte[4 + 2 + int.MaxValue.ToString().Length];
+                imgFile.Read(tempByte, 0, tempByte.Length);
+                var temp = Encoding.UTF8.GetString(tempByte);
+                Console.WriteLine(temp);
+                var temp2 = temp.ToDict();
+                long size = long.Parse(temp2["part"]);
+                temp = temp2.ToString(true);
+
+                imgFile.Position = ICONLENGTH + temp.Length + 6;
+                var readByte = new byte[size];
+
+                var coding = checkBox1 ? comboBox1 : CodingMode.NoCoding;
+                var key = "";
+                switch (coding)
+                {
+                    case CodingMode.SHA256:
+                        key = MD5(SHA256(textBox1));
+                        break;
+                    case CodingMode.MD5:
+                        key = MD5(textBox1);
+                        break;
+                    case CodingMode.NoCoding:
+                    default:
+                        key = MD5("");
+                        break;
+                }
+                var VI = Encoding.UTF8.GetBytes(MD5(key)).Separate(2);
+
+                var readIndex = 0;
+                var md5s = new List<string>();
+
+                //开始解密
+                using (var outFile = File.Create(outPath))
+                {
+
+                } 
+            }
+
+            return 405;
+        }
+
+        /// <summary>
         /// 文件编码
         /// </summary>
         /// <param name="img">图片所在路径</param>
@@ -996,7 +1075,7 @@ namespace FileToImage.Project
             var temp2 = new Dictionary<string, string>();
 
             var tempByte = Item.ReadFile(file);
-            tempByte = Item.Compress(tempByte,compressMode);
+            tempByte = Item.Compress(tempByte, compressMode);
             temp = Item.ByteToString(tempByte);
             temp = Base64.Encode(temp, key);
             while (temp.Length % 4 != 0)
@@ -1062,7 +1141,7 @@ namespace FileToImage.Project
             var temp2 = new Dictionary<string, string>();
 
             var tempByte = Item.ReadFile(file);
-            tempByte = Item.Compress(tempByte,compressMode);
+            tempByte = Item.Compress(tempByte, compressMode);
             temp = Item.ByteToString(tempByte);
             temp = Base64.Encode(temp, key);
             while (temp.Length % 4 != 0)
@@ -1128,7 +1207,7 @@ namespace FileToImage.Project
             var temp2 = new Dictionary<string, string>();
 
             var tempByte = Item.ReadFile(file);
-            tempByte = Item.Compress(tempByte,compressMode);
+            tempByte = Item.Compress(tempByte, compressMode);
             temp = Item.ByteToString(tempByte);
             temp = Base64.Encode(temp, key);
             while (temp.Length % 4 != 0)
@@ -1166,6 +1245,111 @@ namespace FileToImage.Project
             //Item.OpenFile(filePath);
             bmp.Dispose();
             return 100;
+        }
+
+        /// <summary>
+        /// 文件编码(尝试不经过base64编码)
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="checkBox1"></param>
+        /// <param name="comboBox1"></param>
+        /// <param name="textBox1"></param>
+        /// <param name="compressMode"></param>
+        /// <param name="outPath"></param>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        public static int FileToBmp(string filePath, bool checkBox1, string comboBox1, string textBox1, CompressMode compressMode, string outPath, long size)
+        {
+            if (size == 0)
+            {
+                return FileToBmp(filePath, checkBox1, comboBox1, textBox1, compressMode, outPath);
+            }
+            if (File.Exists(outPath))
+            {
+                return 200;
+            }
+
+            var img = FileToImage.Properties.Resources.favicon;
+
+            using (var outFile = File.Create(outPath))
+            {
+                img.Save(outFile);
+                img.Dispose();
+
+                var coding = checkBox1 ? CodingMode.NoCoding.Pause(comboBox1) : CodingMode.NoCoding;
+                //var key = checkBox1 == false ? Base64._keyStr :
+                //    comboBox1 == "无" ? Base64._keyStr :
+                //    comboBox1 == "SHA256" ? Base64.GetKey(textBox1, CodingMode.SHA256) :
+                //    Base64._keyStr;
+                var key = "";
+                switch (coding)
+                {
+                    case CodingMode.SHA256:
+                        key = MD5(SHA256(textBox1));
+                        break;
+                    case CodingMode.MD5:
+                        key = MD5(textBox1);
+                        break;
+                    case CodingMode.NoCoding:
+                    default:
+                        key = MD5("");
+                        break;
+                }
+                var VI = Encoding.UTF8.GetBytes(MD5(key)).Separate(2);
+
+                string temp;
+                Dictionary<string, string> temp2;
+                var file = new FileInfo(filePath);
+                var fileCount = file.Length;
+#if DEBUG
+                Item.WriteColorLine(string.Format("文件大小:{0}", fileCount), ConsoleColor.Blue);
+#endif
+                var readIndex = (int)Math.Ceiling((double)(fileCount / size));//此参数用于显示读取位置,在最开始时候显示分块
+                Console.WriteLine(string.Format("文件分块数量:{0}", readIndex));
+                var md5s = new List<string>();                  //每块签名
+                var readPart = new byte[size];                  //读取使用的字节块,防止重复分配
+                double tempSizeCut = size / 4;                  //
+                var saveSize = Math.Ceiling(tempSizeCut) * 4;   //记录数据每块大小,保证读取时正常
+                byte[] tempByte;
+
+                //开始加密
+                using (var readStream = file.OpenRead())
+                {
+                    readIndex = 0;
+                    //分步操作,需要在内容开始写入分块大小
+                    temp = string.Format("{0}:{1};data:", "part", saveSize);
+                    tempByte = Item.StringToByte(temp);
+
+                    //不需要处理,直接写入文件
+                    outFile.Write(tempByte, 0, tempByte.Length);
+
+                    while (readIndex++ * size < fileCount)
+                    {
+                        readStream.Read(readPart, 0, (int)size);
+                        tempByte = Item.Compress(readPart, compressMode);
+                        md5s.Add(Item.MD5(tempByte));
+                        //进行AES加密
+                        tempByte = AES.Encrypt(tempByte, key, VI);
+                        //写入文件
+                        outFile.Write(tempByte, 0, tempByte.Length);
+                    }
+
+                    //由于分步操作,所以这里字典不需要记录data数据块
+                    temp2 = new Dictionary<string, string>()
+                    {
+                        {"fileName",Base64.Encode(file.Name) },
+                        {"size",fileCount.ToString() },
+                        {"code",coding.ToString() },
+                        {"compress",compressMode.ToString() },
+                        {"MD5",md5s.Join("/") },
+                        {"end","0" }//由于习惯原因,给结尾填上一个标记
+                    };
+                    tempByte = StringToByte(string.Format(";{0}", temp2.ToString(true)));
+                    //将其他数据写入文件
+                    outFile.Write(tempByte, 0, tempByte.Length);
+                }
+                return 100;
+            }
         }
 
         /// <summary>
@@ -1317,6 +1501,7 @@ namespace FileToImage.Project
 
         /// <summary>
         /// 文件编码
+        /// (分步原版2)
         /// </summary>
         /// <param name="filePath"></param>
         /// <param name="checkBox1"></param>
@@ -1326,7 +1511,7 @@ namespace FileToImage.Project
         /// <param name="outPath"></param>
         /// <param name="size"></param>
         /// <returns></returns>
-        public static int FileToBmp(string filePath, bool checkBox1, string comboBox1, string textBox1, CompressMode compressMode, string outPath,long size)
+        public static int FileToBmpBase2(string filePath, bool checkBox1, string comboBox1, string textBox1, CompressMode compressMode, string outPath,long size)
         {
             if (size==0)
             {
@@ -1348,12 +1533,13 @@ namespace FileToImage.Project
             var file = new FileInfo(filePath);
             var fileCount = file.Length;
             Item.WriteColorLine(string.Format("文件大小:{0}", fileCount), ConsoleColor.Blue);
-            var readIndex = (int)Math.Ceiling((double)(fileCount / size));
-            Console.WriteLine(readIndex);
+            double tempDoubleValue = (double)fileCount / (double)size;
+            var readIndex = Math.Ceiling(tempDoubleValue);
+            Console.WriteLine("需要分:"+readIndex+"块");
             var md5s = new List<string>();
             var tempByte = new byte[size];
-            double tempSizeCut = size / 4;
-            var saveSize = Math.Ceiling(tempSizeCut) * 4;   //记录数据每块大小,保证读取时正常
+            tempDoubleValue = size / 3;
+            var saveSize = Math.Ceiling(tempDoubleValue) * 4;   //记录数据每块大小,保证读取时正常
             var saveLength = int.MaxValue;                  //记录数据编码完成后的最大值
             
             //记录添加的字节,用于计算Side
@@ -1362,7 +1548,7 @@ namespace FileToImage.Project
                 double t = 4 + 2 +                                  //part
                 saveSize.ToString().Length +                        //每块的大小
                 4 + 2 +                                             //data
-                readIndex * saveSize * 3 +                          //数据保存大小
+                readIndex * saveSize * 1 +                          //数据保存大小
                 8 + 2 +                                             //fileName
                 Math.Ceiling((double)(file.Name.Length / 3)) * 4 +  //文件名大小
                 4 + 2 +                                             //size
@@ -1374,7 +1560,7 @@ namespace FileToImage.Project
                 3 + 2 +                                             //MD5
                 readIndex*33 +                                      //所有的签名(单个签名32位,加上分隔符33)
                 4 + 2 +                                             //end标记
-                20;                                                 //保留数据大小(防止意外)
+                size;                                               //保留一个块的数据大小(防止意外)
                 return (int)Math.Ceiling(t);
             })();
             MessageBox.Show(count.ToString());
@@ -1407,12 +1593,15 @@ namespace FileToImage.Project
                 {
                     tempByte = new byte[size];
                     readStream.Read(tempByte, 0, (int)size);
+                    Console.WriteLine(tempByte.Length);
                     readIndex++;
                     tempByte = Item.Compress(tempByte, compressMode);
                     md5s.Add(Item.MD5(tempByte));
                     temp = Item.ByteToString(tempByte);
                     temp = Base64.Encode(temp, key);
                     tempByte = Item.StringToByte(temp);
+                    Console.WriteLine(tempByte.Length);
+                    Console.WriteLine();
 
                     //因为是分步操作,所以不能直接使用Base64ToBitmapData,需要在这里重写这个模块
                     tempCount = (int)Math.Floor(tempByte.Length / 3d * 4);
@@ -1832,7 +2021,14 @@ namespace FileToImage.Project
             foreach (var item in temp)
             {
                 var x = item.Split(':');
-                ret.Add(x[0], x[1]);
+                if (x.Length==2)
+                {
+                    ret.Add(x[0], x[1]);
+                }
+                else
+                {
+                    break;
+                }
             }
             return ret;
         }
@@ -1974,6 +2170,44 @@ namespace FileToImage.Project
                 ts[i] = value;
             }
             return ts;
+        }
+
+        /// <summary>
+        /// 数组分离
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name=""></param>
+        /// <param name="groupNumber"></param>
+        /// <returns></returns>
+        public static T[] Separate<T>(this T[] ts, int groupNumber)
+        {
+            return ts.Separate(groupNumber, 0);
+        }
+
+        /// <summary>
+        /// 数组分离
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ts"></param>
+        /// <param name="groubNumber"></param>
+        /// <param name="group"></param>
+        /// <returns></returns>
+        public static T[] Separate<T>(this T[] ts,int groubNumber,int group)
+        {
+            if (groubNumber==0||groubNumber==1)
+            {
+                return ts;
+            }
+            var rets = new List<List<T>> { };
+            for (int i = 0; i < groubNumber; i++)
+            {
+                rets.Add(new List<T>());
+            }
+            for (int i = 0; i < ts.Length; i++)
+            {
+                rets[i % groubNumber].Add(ts[i]);
+            }
+            return rets[group].ToArray();
         }
     }
 

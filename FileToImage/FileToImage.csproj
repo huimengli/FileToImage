@@ -48,7 +48,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>favicon.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\favicon.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>
@@ -131,6 +131,7 @@
       <DependentUpon>Main.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
+    <Compile Include="Project\AES.cs" />
     <Compile Include="Project\Base64.cs" />
     <Compile Include="Project\Compress.cs" />
     <Compile Include="Project\Item.cs" />
@@ -146,6 +147,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="FileToImage_KEY.pfx" />
     <None Include="FileToImage_TemporaryKey.pfx" />
@@ -165,6 +167,7 @@
   <ItemGroup>
     <Content Include="favicon.ico" />
     <Content Include="Image\loading.gif" />
+    <Content Include="Resources\favicon.ico" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">

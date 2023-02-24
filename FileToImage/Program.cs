@@ -419,7 +419,23 @@ namespace FileToImage
                         }
                         else
                         {
+                            //ret = Item.FileToBmpBase2(inputpath, needkey, keyMode.GetValue(), keyValue, compressMode, outpath,size);
                             ret = Item.FileToBmp(inputpath, needkey, keyMode.GetValue(), keyValue, compressMode, outpath,size);
+                        }
+                        break;
+                    case Project.Project.BmpToFileWait:
+                        if (string.IsNullOrEmpty(outpath))
+                        {
+                            ret = 401;
+                        }
+                        else if (size<0)
+                        {
+                            ret = 402;
+                        }
+                        else
+                        {
+                            //ret = Item.FileToBmpBase2(inputpath, needkey, keyMode.GetValue(), keyValue, compressMode, outpath,size);
+                            ret = Item.BmpToFile(inputpath, needkey, keyMode, keyValue, compressMode, outpath);
                         }
                         break;
                     default:
@@ -461,6 +477,8 @@ namespace FileToImage
                         Item.WriteColorLine("使用分步式必须输入-S(分块大小)参数!", ConsoleColor.Red); break;
                     case 404:
                         Item.WriteColorLine("不能多次设定运行模式!",ConsoleColor.Red);break;
+                    case 405:
+                        Item.WriteColorLine("此功能尚未完成!",ConsoleColor.Red);break;
                     default:
                         Item.WriteColorLine( "未知错误!",ConsoleColor.Red); break;
                 }
