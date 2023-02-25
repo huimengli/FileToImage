@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -28,6 +29,11 @@ namespace FileToImage.Project
         /// ICON大小
         /// </summary>
         private static int ICONLENGTH = 16958;
+
+        /// <summary>
+        /// 最大分块大小:50MB
+        /// </summary>
+        private static int LIMITSIZE = 50 * 1024 * 1024;
 
         /// <summary>
         /// 内容开始标记(未确定,是否要使用这个)
@@ -1355,8 +1361,8 @@ namespace FileToImage.Project
                 Item.WriteColorLine(string.Format("文件大小:{0}", fileCount), ConsoleColor.Blue);
 #endif
                 size = size > fileCount ? fileCount : size;     //处理size大小,防止造成aes浪费
-                var readIndex = (int)Math.Ceiling((double)(fileCount / size));//此参数用于显示读取位置,在最开始时候显示分块
-                Console.WriteLine(string.Format("文件分块数量:{0}", readIndex));
+                var AllIndex = (int)Math.Ceiling((double)(fileCount / size));//此参数用于显示读取位置,在最开始时候显示分块
+                Console.WriteLine(string.Format("文件分块数量:{0}", AllIndex));
 
                 var eachPartSize = new List<int>();             //每块大小
                 var md5s = new List<string>();                  //每块签名
@@ -1368,7 +1374,7 @@ namespace FileToImage.Project
                 //开始加密
                 using (var readStream = file.OpenRead())
                 {
-                    readIndex = 0;
+                    var readIndex = 0;
                     ////分步操作,需要在内容开始写入分块大小
                     //temp = string.Format("{0}:{1};data:", "part", saveSize);
                     //tempByte = Item.StringToByte(temp);
@@ -1379,7 +1385,7 @@ namespace FileToImage.Project
                     //先将文件读取加密写入临时文件中
                     using (var tempFile = File.Create(TEMPFILE))
                     {
-                        while (readIndex++ * size < fileCount)
+                        while (readIndex < AllIndex-1)
                         {
                             readStream.Read(readPart, 0, (int)size);
                             tempByte = Item.Compress(readPart, compressMode);
@@ -1389,12 +1395,24 @@ namespace FileToImage.Project
                             eachPartSize.Add(tempByte.Length);
                             //写入临时文件
                             tempFile.Write(tempByte, 0, tempByte.Length);
+                            readIndex++;
                         }
+                        //由于分块不一定是能均分整个文件,所以处理到最后一块的时候,需要修改分块大小
+                        //同时这样可以让文件记录模块不需要对readIndex进行减一操作
+                        tempByte = new byte[fileCount - readIndex * size];
+                        readStream.Read(tempByte, 0, tempByte.Length);
+                        tempByte = Item.Compress(tempByte, compressMode);
+                        md5s.Add(Item.MD5(tempByte));
+                        //进行AES加密
+                        tempByte = AES.Encrypt(tempByte, key, VI);
+                        eachPartSize.Add(tempByte.Length);
+                        //写入临时文件
+                        tempFile.Write(tempByte, 0, tempByte.Length);
                     }
                     //由于分步操作,所以这里字典不需要记录data数据块
                     temp2 = new Dictionary<string, string>()
                     {
-                        {"partNumber",(readIndex-1).ToString() },
+                        {"partNumber",readIndex.ToString() },
                         {"eachPartSize",eachPartSize.Join("/") },
                         {"fileName",Base64.Encode(file.Name) },
                         {"size",fileCount.ToString() },
@@ -1816,7 +1834,58 @@ namespace FileToImage.Project
             Console.ForegroundColor = currentForeColor;
         }
 
-        
+        /// <summary>
+        /// 获取输入分块大小的数据
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public static int GetBytes(string input)
+        {
+            var readG = new Regex(@"([\d]+.?[\d]*)[Gg][Bb]?");
+            var readM = new Regex(@"([\d]+.?[\d]*)[Mm][Bb]?");
+            var readK = new Regex(@"([\d]+.?[\d]*)[Kk][Bb]?");
+            Match match;
+            double ret;
+
+            if (readG.IsMatch(input))
+            {
+                match = readG.Match(input);
+                ret = double.Parse(match.Groups[1].ToString());
+                ret *= 1024 * 1024 * 1024;
+            }
+            else if (readM.IsMatch(input))
+            {
+                match = readM.Match(input);
+                ret = double.Parse(match.Groups[1].ToString());
+                ret *= 1024 * 1024;
+            }
+            else if (readK.IsMatch(input))
+            {
+                match = readK.Match(input);
+                ret = double.Parse(match.Groups[1].ToString());
+                ret *= 1024;
+            }
+            else
+            {
+                ret = double.Parse(input);
+            }
+
+            return (int)Math.Floor(ret);
+        }
+
+        /// <summary>
+        /// 允许的最大分块大小
+        /// </summary>
+        /// <param name="inputBytes"></param>
+        /// <returns></returns>
+        public static int LimitBytes(int inputBytes)
+        {
+            if (inputBytes>LIMITSIZE)
+            {
+                return LIMITSIZE;
+            }
+            return inputBytes;
+        }
     }
 
     /// <summary>

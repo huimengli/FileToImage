@@ -60,6 +60,9 @@ namespace FileToImage
 -CM 压缩模式(压缩不一定会让文件更小):
 -CM No(没有压缩),CLZF/Deflate/ZIP(压缩模式)
 
+-S  启用分块:(没有尾缀即为字节大小)
+-S  1024(=1KB)/1KB/2MB/0.05GB(最大允许块:50MB)
+
 —————————————————————————
 ";
 
@@ -344,7 +347,10 @@ namespace FileToImage
                         //分块大小
                         else if (temp == "S"||temp =="size")
                         {
-                            size = int.Parse(args[i + 1]);
+                            size = Item.LimitBytes(Item.GetBytes(args[i + 1]));
+#if DEBUG
+                            Console.WriteLine(string.Format("SIZE:{0}",size));
+#endif
                             switch (project)
                             {
                                 case Project.Project.NoInput:
