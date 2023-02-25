@@ -206,6 +206,9 @@ namespace FileToImage
                 var keyValue = "";
                 var compressMode = CompressMode.NoCompress;
                 var size = -1;
+#if DEBUG
+                var isTest = false;
+#endif
 
                 var ret = 0;
 
@@ -243,12 +246,15 @@ namespace FileToImage
                             //}
 
                             //测试填充速度
-                            var tempByte = new byte[100000];
-                            var t1 = DateTime.Now;
-                            tempByte.Fill((byte)12);
-                            var t2 = DateTime.Now;
-                            Console.WriteLine(t2.ToFileTime() - t1.ToFileTime());
-                            return 0;
+                            //var tempByte = new byte[100000];
+                            //var t1 = DateTime.Now;
+                            //tempByte.Fill((byte)12);
+                            //var t2 = DateTime.Now;
+                            //Console.WriteLine(t2.ToFileTime() - t1.ToFileTime());
+                            //return 0;
+
+                            //测试加密时间
+                            isTest = true;
                         } 
 #endif
                         //工作模式
@@ -387,7 +393,10 @@ namespace FileToImage
                 }
                 #endregion
 
-
+#if DEBUG
+                DateTime T1, T2;
+                T1 = DateTime.Now; 
+#endif
                 //运行功能
                 switch (project)
                 {
@@ -444,6 +453,13 @@ namespace FileToImage
                         Item.WriteColorLine("没有这个功能!",ConsoleColor.Red);
                         break;
                 }
+#if DEBUG
+                if (isTest)
+                {
+                    T2 = DateTime.Now;
+                    Item.WriteColorLine(string.Format("编码使用的时间:{0}",(T2-T1).ToString()),ConsoleColor.Blue);
+                }
+#endif
 
                 switch (ret)
                 {
