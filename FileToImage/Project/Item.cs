@@ -2370,6 +2370,28 @@ namespace FileToImage.Project
             }
             return ret;
         }
+
+        /// <summary>
+        /// 判断文件是否是图片
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static bool IsImageFile(this FileInfo file)
+        {
+            var names = file.Name.Split('.');
+            var lastName = names[names.Length - 1];
+            lastName = lastName.ToUpper();
+            switch (lastName)
+            {
+                case "BMP":
+                case "JPG":
+                case "PNG":
+                case "JPEG":
+                    return true;
+                default:
+                    return false;
+            }
+        }
     }
 
     /// <summary>
