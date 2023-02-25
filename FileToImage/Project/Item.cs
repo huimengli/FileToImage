@@ -1041,7 +1041,7 @@ namespace FileToImage.Project
                         break;
                     case CodingMode.NoCoding:
                     default:
-                        key = MD5("");
+                        //key = MD5("");
                         break;
                 }
                 var IV = Encoding.UTF8.GetBytes(MD5(key)).Separate(2);
@@ -1348,7 +1348,7 @@ namespace FileToImage.Project
                         break;
                     case CodingMode.NoCoding:
                     default:
-                        key = MD5("");
+                        //key = MD5("");
                         break;
                 }
                 var VI = Encoding.UTF8.GetBytes(MD5(key)).Separate(2);
