@@ -361,7 +361,7 @@ namespace FileToImage.Project
         /// </summary>
         /// <param name="bytes"></param>
         /// <returns></returns>
-        public static byte[] Compress(byte[] bytes)
+        public static byte[] Compress2(byte[] bytes)
         {
             using (var ms = new MemoryStream(bytes))
             {
@@ -384,11 +384,29 @@ namespace FileToImage.Project
         }
 
         /// <summary>
+        /// 压缩,放弃临时文件
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static byte[] Compress(byte[] bytes)
+        {
+            using (var ms = new MemoryStream())
+            {
+                using (var zs = new GZipStream(ms,CompressionMode.Compress))
+                {
+                    zs.Write(bytes, 0, bytes.Length);
+                    zs.Close();
+                    return ms.ToArray();
+                }
+            }
+        }
+
+        /// <summary>
         /// 解压缩,需要用到临时文件
         /// </summary>
         /// <param name="bytes"></param>
         /// <returns></returns>
-        public static byte[] Decompress(byte[] bytes)
+        public static byte[] Decompress2(byte[] bytes)
         {
             var ms = new MemoryStream(bytes);
             var tf = File.Create(TempFile);
@@ -404,6 +422,27 @@ namespace FileToImage.Project
             tf.Close();
             File.Delete(TempFile);
             return ret;
+        }
+
+        /// <summary>
+        /// 解压,放弃临时文件
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static byte[] Decompress(byte[] bytes)
+        {
+            using (var ms = new MemoryStream(bytes))
+            {
+                using (var outMS = new MemoryStream())
+                {
+                    using (var zs = new GZipStream(ms, CompressionMode.Decompress))
+                    {
+                        zs.CopyTo(outMS);
+                        zs.Close();
+                        return outMS.ToArray();
+                    } 
+                }
+            }
         }
     }
 
@@ -422,7 +461,7 @@ namespace FileToImage.Project
         /// </summary>
         /// <param name="bytes"></param>
         /// <returns></returns>
-        public static byte[] Compress(byte[] bytes)
+        public static byte[] Compress2(byte[] bytes)
         {
             using (var ms = new MemoryStream(bytes))
             {
@@ -445,11 +484,29 @@ namespace FileToImage.Project
         }
 
         /// <summary>
+        /// 压缩,放弃临时文件
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static byte[] Compress(byte[] bytes)
+        {
+            using (var ms = new MemoryStream())
+            {
+                using (var ds = new DeflateStream(ms,CompressionMode.Compress))
+                {
+                    ds.Write(bytes, 0, bytes.Length);
+                    ds.Close();
+                    return ms.ToArray();
+                }
+            }
+        }
+
+        /// <summary>
         /// 解压缩,需要用到临时文件
         /// </summary>
         /// <param name="bytes"></param>
         /// <returns></returns>
-        public static byte[] Decompress(byte[] bytes)
+        public static byte[] Decompress2(byte[] bytes)
         {
             var ms = new MemoryStream(bytes);
             var tf = File.Create(TempFile);
@@ -465,6 +522,27 @@ namespace FileToImage.Project
             tf.Close();
             File.Delete(TempFile);
             return ret;
+        }
+
+        /// <summary>
+        /// 解压,放弃临时文件
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static byte[] Decompress(byte[] bytes)
+        {
+            using (var ms = new MemoryStream(bytes))
+            {
+                using (var outMS = new MemoryStream())
+                {
+                    using (var ds = new DeflateStream(ms,CompressionMode.Decompress))
+                    {
+                        ds.CopyTo(outMS);
+                        ds.Close();
+                        return outMS.ToArray();
+                    }
+                }
+            }
         }
     }
 
