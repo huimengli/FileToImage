@@ -60,6 +60,16 @@ namespace FileToImage
 -CM 压缩模式(压缩不一定会让文件更小):
 -CM No(没有压缩),CLZF/Deflate/ZIP(压缩模式)
 
+—————————————————————————
+!!　　　　　　　　　　　　　　　　　　　　　　　!!
+!!　　　注意,使用-S必须使用-OP指定输出位置　　　!!
+!!　　　　　　　　　　　　　　　　　　　　　　　!!
+
+[exeName].exe -BTF -IP [fileName] -S [partSize]
+-OP [outPath] -CM [No/CLZF/ZIP/Deflate]
+将[fileName]以每块[partSize]大小加密为一张图片并
+以[No/CLZF/ZIP/Deflate]模式压缩并保存于[outPath]
+
 -S  启用分块:(没有尾缀即为字节大小)
 -S  1024(=1KB)/1KB/2MB/0.05GB(最大允许块:50MB)
 
