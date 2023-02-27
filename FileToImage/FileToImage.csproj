@@ -154,6 +154,7 @@
     </Compile>
     <None Include="FileToImage_KEY.pfx" />
     <None Include="FileToImage_TemporaryKey.pfx" />
+    <None Include="Message\CCmessage.bat" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -170,6 +171,8 @@
   <ItemGroup>
     <Content Include="favicon.ico" />
     <Content Include="Image\loading.gif" />
+    <Content Include="Message\FileToImage.exe" />
+    <Content Include="Message\message.txt" />
     <Content Include="Resources\favicon.ico" />
   </ItemGroup>
   <ItemGroup>

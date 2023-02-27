@@ -1,0 +1,59 @@
+﻿—————————————————————————
+—　　　　　　　文件和图片互转工具　　　　　　　—
+—　　　　　　　　　　　　　　　　　　　　　　　—
+—　　　　　　　　　　　　　　　作者：绘梦璃　　—
+—————————————————————————
+—————————————————————————
+[exeName].exe -[BTF/FTB/BTFW/FTBW] -IP [fileName] 
+-S [partSize:1024/1k/10Mb/0.05G] -OP [outPath] 
+-CM [No/CLZF/ZIP/Deflate] -NK -KM [MD5/SHA256]
+-KV [You Password]
+
+[exeName].exe -[BTF/FTB/BTFW/FTBW] -IP [fileName] 
+-S [partSize:1024/1k/10Mb/0.05G] -OP [outPath] 
+-CM [No/CLZF/ZIP/Deflate] -P [You Password]
+—————————————————————————
+
+-? -H -help 获取帮助
+-FTB -fileToBmp 文件转为图片
+-BTF -bmpToFile 图片转为文件
+-IP -inputPath -inputpath 输入文件路径
+-OP -outPath -outpath 输出文件路径(默认原路径)
+　　　　　　　(使用此参数时,不会调用explorer)
+-NK -needKey -needkey 需要密码(不输入:无)
+-KM -keyMode -keymode 加密模式(默认:无)
+-KV -keyValue -keyvalue 密码内容
+-P -password 密码(等同于-NK -KM SHA256 -KV)
+-CM -compressMode -compressmode 压缩模式(默认:无)
+-S -size 启用分块,用于减少转化大文件时内存占用
+
+—————————————————————————
+
+使用范例[方括号中为你应输入的内容](括号内为解释):
+[exeName].exe -BTF -IP [fileName] -P [password]
+将[fileName]以[password]加密为一张图片并保存
+
+[exeName].exe -FTB -IP [fileName] -P [password]
+将[fileName]以[password]解码为源文件并保存
+
+-KM 加密模式:
+-KM No(没有加密)/SHA256(sha256加密)
+
+-CM 压缩模式(压缩不一定会让文件更小):
+-CM No(没有压缩),CLZF/Deflate/ZIP(压缩模式)
+
+—————————————————————————
+!!　　　　　　　　　　　　　　　　　　　　　　　!!
+!!　　　注意,使用-S必须使用-OP指定输出位置　　　!!
+!!　　　　　　　　　　　　　　　　　　　　　　　!!
+
+使用范例[方括号中为你应输入的内容](括号内为解释):
+[exeName].exe -BTF -IP [fileName] -S [partSize]
+-OP [outPath] -CM [No/CLZF/ZIP/Deflate]
+将[fileName]以每块[partSize]大小加密为一张图片并
+以[No/CLZF/ZIP/Deflate]模式压缩并保存于[outPath]
+
+-S  启用分块:(没有尾缀即为字节大小)
+-S  1024(=1KB)/1KB/2MB/0.05GB(最大允许块:50MB)
+
+—————————————————————————
