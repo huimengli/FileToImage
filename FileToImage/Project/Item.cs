@@ -1044,7 +1044,7 @@ namespace FileToImage.Project
                         //key = MD5("");
                         break;
                 }
-                var IV = Encoding.UTF8.GetBytes(MD5(key)).Separate(2);
+                byte[] IV = checkBox1 ? Encoding.UTF8.GetBytes(MD5(key)).Separate(2) : null;
                 var ret = 100;
 
                 if (temp2["code"] != coding.ToString())
@@ -1074,14 +1074,17 @@ namespace FileToImage.Project
                         tempByte = new byte[eachPartSize[i]];
                         imgFile.Read(tempByte, 0, tempByte.Length);
                         //先进行解密
-                        try
+                        if (checkBox1)
                         {
-                            tempByte = AES.Decrypt(tempByte, key, IV);
-                        }
-                        catch (Exception)
-                        {
-                            ret = 303;
-                            break;
+                            try
+                            {
+                                tempByte = AES.Decrypt(tempByte, key, IV);
+                            }
+                            catch (Exception)
+                            {
+                                ret = 303;
+                                break;
+                            } 
                         }
                         md5 = MD5(tempByte);
                         if (md5!=md5s[i])
@@ -1351,7 +1354,7 @@ namespace FileToImage.Project
                         //key = MD5("");
                         break;
                 }
-                var VI = Encoding.UTF8.GetBytes(MD5(key)).Separate(2);
+                byte[] VI = checkBox1 ? Encoding.UTF8.GetBytes(MD5(key)).Separate(2) : null;
 
                 string temp;
                 Dictionary<string, string> temp2;
@@ -1391,7 +1394,10 @@ namespace FileToImage.Project
                             tempByte = Item.Compress(readPart, compressMode);
                             md5s.Add(Item.MD5(tempByte));
                             //进行AES加密
-                            tempByte = AES.Encrypt(tempByte, key, VI);
+                            if (checkBox1)
+                            {
+                                tempByte = AES.Encrypt(tempByte, key, VI); 
+                            }
                             eachPartSize.Add(tempByte.Length);
                             //写入临时文件
                             tempFile.Write(tempByte, 0, tempByte.Length);
@@ -1404,7 +1410,10 @@ namespace FileToImage.Project
                         tempByte = Item.Compress(tempByte, compressMode);
                         md5s.Add(Item.MD5(tempByte));
                         //进行AES加密
-                        tempByte = AES.Encrypt(tempByte, key, VI);
+                        if (checkBox1)
+                        {
+                            tempByte = AES.Encrypt(tempByte, key, VI);
+                        }
                         eachPartSize.Add(tempByte.Length);
                         //写入临时文件
                         tempFile.Write(tempByte, 0, tempByte.Length);

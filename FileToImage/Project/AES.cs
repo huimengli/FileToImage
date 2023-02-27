@@ -112,18 +112,7 @@ namespace FileToImage.Project
         /// <returns></returns>
         public static byte[] Encrypt(byte[] array,string key, byte[] IV)
         {
-            try
-            {
-                key = FmtPassword(key);
-            }
-            catch (AESException err)
-            {
-                if (err.Message== "密钥不能为空!")
-                {
-                    return array;
-                }
-                throw;
-            }
+            key = FmtPassword(key);
             byte[] keyArray = Encoding.UTF8.GetBytes(key);
             byte[] retArray;
 
@@ -226,18 +215,7 @@ namespace FileToImage.Project
         /// <returns></returns>
         public static byte[] Decrypt(byte[] array, string key,byte[] IV)
         {
-            try
-            {
-                key = FmtPassword(key);
-            }
-            catch (AESException err)
-            {
-                if (err.Message == "密钥不能为空!")
-                {
-                    return array;
-                }
-                throw;
-            }
+            key = FmtPassword(key);
             byte[] keyArray = UTF8Encoding.UTF8.GetBytes(key);
             byte[] retArray;
 
