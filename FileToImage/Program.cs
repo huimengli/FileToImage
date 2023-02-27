@@ -31,6 +31,16 @@ namespace FileToImage
 —　　　　　　　　　　　　　　　　　　　　　　　—
 —　　　　　　　　　　　　　　　作者：绘梦璃　　—  
 —————————————————————————
+—————————————————————————
+[exeName].exe -[BTF/FTB/BTFW/FTBW] -IP [fileName] 
+-S [partSize:1024/1k/10Mb/0.05G] -OP [outPath] 
+-CM [No/CLZF/ZIP/Deflate] -NK -KM [MD5/SHA256]
+-KV [You Password]
+
+[exeName].exe -[BTF/FTB/BTFW/FTBW] -IP [fileName] 
+-S [partSize:1024/1k/10Mb/0.05G] -OP [outPath] 
+-CM [No/CLZF/ZIP/Deflate] -P [You Password]
+—————————————————————————
 
 -? -H -help 获取帮助
 -FTB -fileToBmp 文件转为图片
@@ -65,6 +75,7 @@ namespace FileToImage
 !!　　　注意,使用-S必须使用-OP指定输出位置　　　!!
 !!　　　　　　　　　　　　　　　　　　　　　　　!!
 
+使用范例[方括号中为你应输入的内容](括号内为解释):
 [exeName].exe -BTF -IP [fileName] -S [partSize]
 -OP [outPath] -CM [No/CLZF/ZIP/Deflate]
 将[fileName]以每块[partSize]大小加密为一张图片并
