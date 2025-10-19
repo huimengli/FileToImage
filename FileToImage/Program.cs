@@ -10,6 +10,7 @@ using System.ComponentModel;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace FileToImage
 {
@@ -24,7 +25,7 @@ namespace FileToImage
         /// <summary>
         /// 需要展现给用户的消息
         /// </summary>
-        private static byte[] message = new byte[944] { 197, 85, 91, 79, 19, 81, 16, 126, 39, 225, 63, 28, 222, 182, 9, 203, 22, 34, 62, 52, 49, 198, 106, 16, 82, 139, 77, 74, 48, 210, 244, 161, 202, 26, 8, 45, 187, 105, 65, 209, 167, 34, 148, 10, 20, 138, 136, 64, 184, 196, 162, 92, 19, 90, 26, 49, 180, 244, 198, 127, 209, 61, 187, 203, 147, 127, 193, 57, 59, 11, 109, 67, 49, 17, 27, 77, 54, 187, 115, 246, 124, 51, 103, 206, 204, 55, 51, 63, 243, 103, 223, 195, 75, 245, 122, 26, 27, 224, 245, 35, 28, 190, 250, 168, 203, 81, 37, 127, 66, 23, 99, 116, 189, 164, 77, 71, 149, 220, 162, 94, 60, 164, 153, 29, 26, 201, 212, 196, 255, 214, 216, 159, 62, 55, 50, 166, 20, 55, 244, 112, 228, 103, 97, 77, 203, 175, 170, 159, 119, 181, 197, 137, 106, 99, 117, 141, 89, 253, 140, 121, 196, 49, 177, 219, 23, 16, 189, 45, 32, 16, 222, 99, 239, 233, 16, 58, 122, 236, 2, 124, 159, 48, 225, 137, 151, 240, 93, 46, 226, 121, 49, 232, 71, 28, 105, 108, 224, 221, 196, 35, 251, 130, 35, 238, 193, 55, 162, 173, 213, 218, 118, 75, 104, 29, 18, 90, 173, 206, 103, 130, 181, 197, 218, 254, 16, 52, 30, 131, 134, 52, 58, 226, 242, 141, 12, 24, 10, 247, 157, 196, 211, 45, 9, 247, 31, 245, 117, 8, 125, 93, 46, 225, 129, 248, 194, 239, 27, 1, 99, 124, 183, 131, 240, 14, 216, 117, 62, 104, 23, 220, 157, 247, 218, 218, 111, 123, 1, 239, 232, 37, 158, 167, 210, 40, 113, 249, 66, 161, 87, 82, 176, 31, 254, 253, 127, 87, 93, 87, 124, 170, 107, 38, 224, 236, 187, 132, 239, 36, 252, 128, 232, 151, 137, 62, 159, 161, 241, 101, 154, 77, 209, 153, 3, 216, 129, 235, 17, 158, 93, 172, 71, 178, 7, 100, 130, 229, 1, 37, 161, 100, 115, 88, 33, 128, 129, 56, 16, 254, 89, 64, 238, 145, 58, 0, 72, 240, 63, 98, 16, 15, 24, 136, 15, 63, 56, 44, 227, 125, 77, 81, 102, 162, 94, 250, 64, 35, 59, 166, 221, 204, 17, 45, 77, 2, 26, 98, 195, 75, 23, 88, 169, 2, 25, 205, 85, 34, 185, 243, 252, 170, 158, 218, 166, 243, 159, 112, 109, 105, 108, 168, 89, 34, 156, 82, 60, 211, 150, 246, 213, 228, 54, 141, 191, 85, 63, 166, 213, 149, 147, 102, 37, 59, 167, 20, 214, 244, 244, 4, 108, 136, 99, 178, 95, 10, 138, 65, 208, 55, 120, 49, 44, 138, 253, 14, 241, 53, 10, 67, 32, 156, 111, 132, 245, 221, 113, 122, 52, 165, 37, 198, 57, 208, 68, 167, 109, 234, 74, 130, 169, 0, 141, 120, 64, 57, 165, 126, 209, 16, 2, 76, 160, 51, 9, 192, 171, 251, 91, 180, 16, 55, 253, 188, 196, 247, 26, 176, 94, 159, 127, 20, 21, 94, 26, 18, 154, 167, 83, 17, 154, 58, 5, 20, 132, 64, 54, 51, 110, 110, 113, 90, 114, 154, 46, 196, 148, 220, 252, 5, 123, 145, 184, 32, 246, 90, 144, 65, 252, 115, 41, 32, 7, 197, 80, 8, 157, 185, 88, 161, 71, 243, 179, 90, 225, 160, 166, 71, 110, 194, 135, 128, 168, 132, 46, 28, 65, 56, 232, 187, 41, 186, 185, 210, 12, 18, 28, 69, 163, 113, 154, 126, 207, 154, 96, 108, 153, 110, 239, 97, 248, 33, 128, 204, 207, 228, 42, 157, 75, 0, 140, 113, 168, 206, 148, 196, 140, 233, 177, 9, 165, 52, 235, 81, 151, 79, 213, 217, 67, 26, 207, 40, 217, 36, 144, 74, 41, 38, 104, 110, 9, 115, 160, 173, 77, 98, 196, 188, 28, 66, 96, 5, 16, 125, 239, 203, 121, 116, 198, 98, 187, 82, 188, 6, 87, 171, 139, 149, 213, 151, 92, 174, 45, 154, 158, 42, 111, 42, 249, 157, 242, 30, 166, 148, 57, 144, 13, 211, 66, 2, 121, 78, 79, 79, 148, 179, 77, 8, 69, 141, 78, 97, 20, 207, 13, 15, 131, 27, 64, 202, 89, 9, 229, 22, 204, 161, 84, 121, 18, 203, 126, 37, 197, 108, 248, 171, 91, 226, 212, 175, 91, 234, 198, 52, 238, 89, 204, 214, 198, 133, 6, 124, 240, 49, 127, 26, 250, 64, 150, 42, 66, 224, 130, 85, 5, 92, 46, 181, 198, 106, 35, 117, 96, 102, 123, 253, 27, 77, 199, 89, 48, 153, 86, 249, 8, 67, 195, 210, 108, 116, 44, 179, 91, 177, 206, 197, 85, 218, 181, 212, 157, 27, 77, 77, 117, 153, 181, 77, 77, 85, 166, 212, 227, 125, 117, 50, 222, 140, 180, 227, 221, 244, 44, 114, 190, 149, 55, 87, 143, 93, 106, 44, 10, 49, 193, 6, 164, 20, 231, 180, 98, 234, 58, 59, 127, 235, 210, 191, 101, 126, 197, 144, 242, 98, 219, 45, 143, 164, 107, 7, 210, 85, 214, 170, 71, 113, 104, 24, 101, 83, 208, 39, 128, 48, 215, 149, 11, 92, 17, 136, 94, 203, 50, 82, 6, 233, 115, 201, 118, 232, 65, 151, 78, 25, 204, 117, 147, 170, 62, 101, 187, 160, 99, 186, 164, 21, 194, 116, 238, 152, 141, 166, 228, 138, 62, 243, 22, 221, 192, 254, 70, 216, 12, 230, 238, 180, 58, 236, 22, 1, 94, 66, 155, 211, 142, 147, 216, 206, 169, 27, 97, 134, 140, 140, 235, 169, 44, 179, 215, 110, 117, 218, 235, 77, 219, 95 };
+        private static byte[] message = new byte[] { 197, 86, 91, 111, 26, 71, 20, 126, 183, 228, 255, 48, 126, 91, 36, 175, 23, 187, 113, 31, 144, 170, 170, 36, 114, 19, 81, 28, 36, 44, 71, 13, 226, 129, 212, 27, 217, 10, 100, 17, 216, 105, 210, 39, 136, 13, 216, 220, 235, 16, 112, 109, 210, 224, 212, 56, 88, 50, 23, 213, 150, 193, 92, 204, 127, 105, 119, 102, 215, 79, 249, 11, 61, 179, 179, 54, 32, 227, 74, 77, 81, 43, 173, 224, 204, 206, 119, 206, 156, 57, 243, 157, 111, 246, 83, 171, 251, 71, 32, 51, 170, 103, 124, 12, 126, 254, 12, 4, 110, 62, 36, 27, 145, 91, 103, 120, 59, 142, 247, 46, 148, 173, 136, 220, 220, 86, 59, 199, 184, 94, 196, 161, 250, 80, 252, 223, 6, 251, 167, 207, 103, 5, 147, 59, 121, 53, 16, 250, 212, 222, 85, 90, 59, 228, 195, 161, 178, 189, 62, 24, 108, 164, 53, 27, 93, 48, 135, 248, 82, 156, 119, 121, 68, 231, 20, 24, 136, 119, 152, 23, 230, 132, 185, 5, 179, 0, 255, 143, 168, 241, 200, 137, 248, 7, 54, 228, 120, 186, 226, 102, 56, 52, 62, 198, 219, 145, 195, 235, 242, 173, 218, 87, 126, 18, 77, 211, 198, 153, 59, 194, 244, 51, 97, 218, 104, 125, 34, 24, 167, 140, 179, 223, 130, 199, 67, 240, 144, 214, 86, 109, 174, 213, 101, 205, 225, 174, 21, 57, 230, 37, 225, 238, 119, 143, 231, 132, 199, 15, 108, 194, 61, 241, 169, 219, 181, 10, 193, 248, 121, 11, 226, 45, 48, 107, 189, 55, 43, 216, 239, 127, 51, 51, 251, 165, 19, 240, 150, 69, 228, 248, 94, 90, 67, 54, 151, 223, 255, 163, 228, 91, 130, 119, 255, 127, 170, 182, 27, 57, 141, 244, 36, 96, 237, 175, 17, 127, 31, 241, 203, 162, 219, 139, 212, 100, 29, 167, 178, 184, 81, 193, 209, 35, 152, 129, 237, 33, 158, 110, 108, 65, 50, 123, 188, 136, 181, 7, 180, 132, 220, 104, 178, 14, 1, 12, 212, 1, 241, 79, 60, 222, 5, 105, 14, 128, 136, 189, 103, 24, 134, 7, 12, 212, 135, 95, 121, 238, 101, 251, 213, 77, 47, 53, 213, 139, 55, 56, 84, 212, 227, 214, 171, 248, 98, 3, 208, 80, 27, 94, 186, 194, 74, 125, 200, 72, 179, 31, 201, 93, 182, 118, 212, 202, 1, 78, 190, 103, 99, 195, 248, 216, 208, 22, 225, 228, 78, 87, 201, 148, 72, 249, 0, 167, 94, 147, 183, 53, 146, 59, 155, 148, 27, 9, 185, 189, 171, 214, 214, 97, 66, 124, 233, 117, 75, 62, 209, 7, 254, 26, 47, 158, 139, 226, 146, 69, 124, 197, 140, 103, 96, 92, 230, 3, 234, 97, 16, 87, 195, 74, 33, 200, 129, 39, 75, 218, 68, 114, 5, 234, 2, 52, 226, 1, 101, 149, 150, 68, 205, 240, 80, 3, 71, 11, 128, 39, 165, 125, 220, 78, 233, 121, 94, 227, 23, 53, 216, 162, 203, 189, 198, 28, 94, 104, 22, 11, 143, 195, 33, 92, 57, 7, 20, 148, 192, 171, 159, 184, 62, 197, 41, 229, 45, 156, 142, 203, 205, 228, 21, 123, 25, 113, 193, 92, 52, 48, 6, 241, 63, 72, 30, 175, 79, 244, 251, 89, 50, 87, 35, 150, 81, 50, 166, 180, 143, 134, 102, 100, 71, 188, 31, 136, 138, 112, 186, 10, 229, 192, 155, 97, 252, 46, 55, 9, 22, 44, 133, 35, 41, 92, 251, 153, 138, 96, 60, 139, 15, 62, 178, 242, 67, 1, 105, 158, 229, 29, 156, 40, 0, 140, 114, 104, 164, 148, 124, 241, 197, 212, 29, 146, 173, 225, 15, 191, 178, 114, 128, 186, 209, 53, 148, 100, 13, 231, 75, 36, 127, 172, 148, 98, 184, 153, 34, 153, 42, 137, 7, 149, 189, 83, 146, 44, 226, 90, 88, 79, 45, 150, 37, 177, 14, 222, 172, 65, 175, 202, 141, 168, 218, 221, 83, 247, 227, 228, 77, 2, 100, 82, 110, 134, 199, 199, 212, 106, 157, 156, 148, 200, 70, 138, 1, 149, 204, 123, 178, 153, 86, 118, 55, 116, 225, 79, 39, 72, 62, 128, 139, 29, 122, 200, 135, 65, 185, 91, 33, 25, 88, 61, 142, 211, 135, 120, 243, 23, 32, 12, 174, 182, 213, 200, 41, 164, 194, 50, 200, 21, 200, 201, 91, 245, 227, 111, 112, 58, 35, 239, 74, 70, 90, 53, 190, 46, 95, 196, 28, 36, 123, 78, 98, 199, 56, 85, 151, 27, 101, 232, 43, 185, 83, 192, 205, 12, 163, 33, 36, 207, 170, 228, 228, 24, 4, 70, 0, 129, 172, 46, 35, 81, 131, 233, 134, 126, 105, 237, 58, 168, 87, 84, 98, 188, 61, 121, 129, 98, 246, 38, 229, 86, 177, 55, 199, 88, 77, 19, 104, 4, 112, 187, 192, 90, 29, 159, 159, 201, 221, 119, 192, 134, 33, 98, 169, 233, 199, 103, 46, 198, 234, 74, 85, 164, 153, 214, 143, 167, 127, 37, 218, 0, 253, 93, 102, 98, 175, 230, 37, 142, 252, 190, 79, 242, 91, 108, 206, 160, 171, 59, 231, 95, 118, 193, 159, 254, 82, 243, 135, 126, 25, 232, 9, 54, 160, 194, 0, 155, 171, 236, 82, 121, 168, 28, 233, 172, 218, 59, 197, 181, 20, 45, 38, 245, 234, 45, 161, 121, 24, 38, 53, 209, 214, 5, 155, 138, 55, 215, 31, 215, 48, 242, 246, 152, 152, 24, 201, 231, 198, 196, 196, 64, 40, 214, 22, 147, 140, 118, 188, 29, 119, 67, 151, 251, 45, 125, 244, 208, 70, 226, 17, 168, 9, 211, 96, 185, 147, 80, 58, 149, 219, 226, 252, 219, 148, 254, 91, 230, 247, 221, 211, 78, 118, 243, 244, 110, 229, 91, 239, 228, 155, 172, 37, 213, 20, 104, 102, 47, 20, 72, 37, 16, 230, 182, 118, 129, 45, 2, 209, 135, 69, 102, 148, 97, 244, 185, 102, 59, 200, 240, 117, 82, 26, 115, 237, 104, 64, 170, 77, 87, 116, 172, 93, 40, 237, 0, 78, 156, 208, 219, 185, 156, 83, 163, 175, 89, 26, 76, 226, 17, 253, 12, 225, 190, 154, 182, 152, 13, 2, 252, 8, 51, 86, 51, 251, 24, 49, 115, 84, 243, 0, 25, 10, 170, 149, 6, 141, 55, 107, 180, 154, 71, 77, 219, 191, 0 };
 
         /// <summary>
         /// 需要展现给用户的信息
@@ -180,6 +181,7 @@ namespace FileToImage
                 var size = -1;
 #if DEBUG
                 var isTest = false;
+                MessageBox.Show(args.ToString(true));
 #endif
 
                 var ret = 0;
@@ -187,188 +189,357 @@ namespace FileToImage
                 //Console.WriteLine(args.ToString());
                 //MessageBox.Show(args.ToString(true));
 
-                Match match;
-                string temp;
-                //检查给予参数
-                for (int i = 0; i < args.Length; i++)
+                // 特殊参数检查
+                if (args.Length == 1 && !(args[0].StartsWith("-") || args[0].StartsWith("/")))
                 {
-                    match = Read_.Match(args[i]);
-                    temp = match.Groups[1].ToString();
-                    if (temp == "/" || temp == "-")
+                    inputpath = args[0];
+                    FileInfo imgFile = new FileInfo(inputpath);
+                    if (imgFile.Exists)
                     {
-                        temp = match.Groups[2].ToString();
-                        //帮助
-                        if (temp == "?" || temp == "help")
+                        //判断工作模式
+                        while (project == Project.Project.NoInput)
                         {
-                            //MessageBox.Show(message, "帮助", MessageBoxButtons.OK);
-                            //return message;
-                            Console.WriteLine(Message);
-                            return 0;
-                        }
-#if DEBUG
-                        //测试
-                        else if (temp == "test" || temp == "T")
-                        {
-                            //var tempStr = new StringBuilder();
-                            //for (int x = 0; x < 10; x++)
-                            //{
-                            //    tempStr.Append(i);
-                            //    Console.WriteLine(i);
-                            //    Console.WriteLine(Base64.Encode(tempStr.ToString()));
-                            //}
-
-                            //测试填充速度
-                            //var tempByte = new byte[100000];
-                            //var t1 = DateTime.Now;
-                            //tempByte.Fill((byte)12);
-                            //var t2 = DateTime.Now;
-                            //Console.WriteLine(t2.ToFileTime() - t1.ToFileTime());
-                            //return 0;
-
-                            //测试加密时间
-                            isTest = true;
+                            Item.WriteColorLine("需要设置工作模式!\n", ConsoleColor.Yellow);
+                            var temp = Interaction.InputBox("请输入工作模式!", "提示", "BTF/FTB");
+                            project = Project.Project.NoInput.Pause(temp);
                         }
 
-                        //内容压缩
-                        else if (temp == "CC"||temp == "contentCompression")
+                        // 根据工作模式继续输入内容
+                        switch (project)
                         {
-                            var file = new FileInfo(args[i + 1]);
-                            if (file.Exists)
-                            {
-                                using (var fs = file.OpenRead())
+                            default:
+                            case Project.Project.NoInput:
+                                ret = 406; break;
+                            case Project.Project.BmpToFile:
+                                // 尝试从文件名中读取参数
+                                try
                                 {
-                                    var allvalue = new byte[file.Length];
-                                    fs.Read(allvalue, 0, allvalue.Length);
-                                    allvalue = Item.Compress(allvalue, CompressMode.Deflate);
-                                    Console.WriteLine(allvalue.ToString(true));
-                                } 
-                            }
-                            return 0;
-                        }
-#endif
-                        //工作模式
-                        else if (temp == "FTB" || temp == "fileToBmp")
-                        {
-                            if (project == Project.Project.NoInput)
-                            {
-                                project = Project.Project.FileToBmp;
-                            }
-                            else
-                            {
-                                MessageBox.Show("不能多次设定工作模式!", "错误", MessageBoxButtons.OK);
-                                return 404;
-                            }
-                        }
-                        else if (temp == "BTF" || temp == "bmpToFile")
-                        {
-                            if (project == Project.Project.NoInput)
-                            {
-                                project = Project.Project.BmpToFile;
-                            }
-                            else
-                            {
-                                MessageBox.Show("不能多次设定工作模式!", "错误", MessageBoxButtons.OK);
-                                return 404;
-                            }
-                        }
-                        else if (temp == "FTBW" || temp == "fileToBmpWait")
-                        {
-                            if (project == Project.Project.NoInput)
-                            {
-                                project = Project.Project.FileToBmpWait;
-                            }
-                            else
-                            {
-                                MessageBox.Show("不能多次设定工作模式!", "错误", MessageBoxButtons.OK);
-                                return 404;
-                            }
-                        }
-                        else if (temp == "BTFW" || temp == "bmpToFileWati")
-                        {
-                            if (project == Project.Project.NoInput)
-                            {
-                                project = Project.Project.BmpToFileWait;
-                            }
-                            else
-                            {
-                                MessageBox.Show("不能多次设定工作模式!", "错误", MessageBoxButtons.OK);
-                                return 404;
-                            }
-                        }
-                        //输入文件路径
-                        else if (temp == "IP" || temp == "inputPath" || temp == "inputpath")
-                        {
-                            inputpath = args[i + 1];
-                        }
-                        //输出文件路径
-                        else if (temp == "OP" || temp == "outPath" || temp == "outpath")
-                        {
-                            outpath = args[i + 1];
-                        }
-                        //是否需要密码
-                        else if (temp == "NK" || temp == "needKey" || temp == "needkey")
-                        {
-                            needkey = true;
-                        }
-                        //加密模式
-                        else if (temp == "KM" || temp == "keyMode" || temp == "keymode")
-                        {
-                            keyMode = CodingMode.NoCoding.Pause(args[i + 1]);
-                        }
-                        //输入密码
-                        else if (temp == "KV" || temp == "keyValue" || temp == "keyvalue")
-                        {
-                            keyValue = args[i + 1];
-                        }
-                        else if (temp == "P" || temp == "password")
-                        {
-                            needkey = true;
-                            keyMode = CodingMode.SHA256;
-                            keyValue = args[i + 1];
-                        }
-                        //压缩模式
-                        else if (temp == "CM" || temp == "compressMode" || temp == "compressmode")
-                        {
-                            try
-                            {
-                                compressMode = CompressMode.NoCompress.Pause(args[i + 1]);
-                            }
-                            catch (Exception)
-                            {
-                                compressMode = CompressMode.NoCompress;
-                                Item.WriteColorLine("压缩模式输入错误!\n已经选择默认压缩模式",ConsoleColor.Red);
-                            }
-                        }
-                        //分块大小
-                        else if (temp == "S"||temp =="size")
-                        {
-                            size = Item.LimitBytes(Item.GetBytes(args[i + 1]));
+                                    // 读取文件名中的参数
+                                    string extension = imgFile.Extension;
+                                    string fullName = imgFile.FullName.Remove(imgFile.FullName.Length - extension.Length,extension.Length);
+                                    string[] @params = fullName.Split('_');
+
+                                    // 读取输出文件名
+                                    outpath = @params[0];
+
+                                    // 读取其他参数
+                                    Match match;
+                                    string t;
+                                    for (int i = 1; i < @params.Length; i++)
+                                    {
+                                        string[] targs = @params[i].Split('#');
+                                        match = Read_.Match(targs[0]);
+                                        t = match.Groups[1].ToString();
+                                        if (t == "-")
+                                        {
+                                            t = match.Groups[2].ToString();
+
+                                            // 是否需要密码
+                                            if (t == "P" || t == "password")
+                                            {
+                                                needkey = true;
+                                                keyMode = CodingMode.SHA256;
+                                                keyValue = Item.Base64Decode(targs[1]);
+                                            }
+                                            // 压缩模式
+                                            else if(t == "CM" || t == "compressMode" || t == "compressmode")
+                                            {
+                                                try
+                                                {
+                                                    compressMode = CompressMode.NoCompress.Pause(targs[1]);
+                                                }
+                                                catch (Exception)
+                                                {
+                                                    compressMode = CompressMode.NoCompress;
+                                                    Item.WriteColorLine("压缩模式输入错误!\n已经选择默认压缩模式", ConsoleColor.Red);
+                                                }
+                                            }
+                                            //分块大小
+                                            else if (t == "S" || t == "size")
+                                            {
+                                                size = Item.LimitBytes(Item.GetBytes(targs[1]));
 #if DEBUG
-                            Console.WriteLine(string.Format("SIZE:{0}",size));
+                                                Console.WriteLine(string.Format("SIZE:{0}", size));
 #endif
-                            switch (project)
+                                            }
+                                        }
+                                    }
+
+                                    // 解码图片
+                                    ret = Item.BmpToFile(inputpath, needkey, keyMode, keyValue, compressMode, outpath);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Item.WriteColorLine("尝试直接解码图片失败!", ConsoleColor.Red);
+                                    Item.WriteColorLine("错误信息:\n", ConsoleColor.Red);
+#if DEBUG
+                                    throw ex;
+#else
+                                    Item.WriteColorLine(ex.Message, ConsoleColor.Red);
+#endif
+                                }
+
+                                break;
+                            case Project.Project.FileToBmp:
+                                // 设置工作参数
+
+                                // 设置输出文件参数
+                                StringBuilder outputBuilder = new StringBuilder();
+
+                                // 密码加密
+                                var temp = Interaction.InputBox("是否需要加密?(需要的话直接输入密码)", "提示", "");
+                                if (string.IsNullOrEmpty(temp))
+                                {
+                                    needkey = false;
+                                    keyMode = CodingMode.NoCoding;
+                                    keyValue = "";
+                                }
+                                else
+                                {
+                                    needkey = true;
+                                    keyMode = CodingMode.SHA256;
+                                    keyValue = temp;
+
+                                    outputBuilder.Append("-P#");
+                                    outputBuilder.Append(Item.Base64Encode(temp));
+                                    outputBuilder.Append("_");
+                                }
+
+                                // 压缩模式
+                                temp = Interaction.InputBox(
+                                    "是否需要压缩?(为空则不压缩)",
+                                    "提示",
+                                    Enum.GetValues(typeof(CompressMode))
+                                        .Cast<CompressMode>()
+                                        .Select(value => value.ToString())
+                                        .ToArray()
+                                        .Join(",")
+                                );
+                                if (string.IsNullOrEmpty(temp))
+                                {
+                                    compressMode = CompressMode.NoCompress;
+                                }
+                                else
+                                {
+                                    try
+                                    {
+                                        compressMode = CompressMode.NoCompress.Pause(temp);
+                                        if(compressMode != CompressMode.NoCompress)
+                                        {
+                                            outputBuilder.Append("-CM#");
+                                            outputBuilder.Append(compressMode.ToString());
+                                            outputBuilder.Append("_");
+                                        }
+                                    }
+                                    catch (Exception)
+                                    {
+                                        compressMode = CompressMode.NoCompress;
+                                        Item.WriteColorLine("压缩模式输入错误!\n已经选择默认压缩模式", ConsoleColor.Red);
+                                    }
+                                }
+
+                                // 默认分块(50MB)
+                                size = Item.LimitBytes(Item.GetBytes("50mb"));
+                                outputBuilder.Append("-S#1");
+
+                                // 设置输出文件
+                                outpath = $"{imgFile.FullName}_{outputBuilder.ToString()}.png";
+
+                                // 转码文件
+                                ret = Item.FileToBmp(inputpath, needkey, keyMode.GetValue(), keyValue, compressMode, outpath, size);
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        ret = 201;
+                    }
+                }
+                else  // 原有处理逻辑
+                {
+                    Match match;
+                    string temp;
+                    //检查给予参数
+                    for (int i = 0; i < args.Length; i++)
+                    {
+                        match = Read_.Match(args[i]);
+                        temp = match.Groups[1].ToString();
+                        if (temp == "/" || temp == "-")
+                        {
+                            temp = match.Groups[2].ToString();
+                            //帮助
+                            if (temp == "?" || temp == "help")
                             {
-                                case Project.Project.NoInput:
-                                    break;
-                                case Project.Project.FileToBmp:
+                                //MessageBox.Show(message, "帮助", MessageBoxButtons.OK);
+                                //return message;
+                                Console.WriteLine(Message);
+                                return 0;
+                            }
+#if DEBUG
+                            //测试
+                            else if (temp == "test" || temp == "T")
+                            {
+                                //var tempStr = new StringBuilder();
+                                //for (int x = 0; x < 10; x++)
+                                //{
+                                //    tempStr.Append(i);
+                                //    Console.WriteLine(i);
+                                //    Console.WriteLine(Base64.Encode(tempStr.ToString()));
+                                //}
+
+                                //测试填充速度
+                                //var tempByte = new byte[100000];
+                                //var t1 = DateTime.Now;
+                                //tempByte.Fill((byte)12);
+                                //var t2 = DateTime.Now;
+                                //Console.WriteLine(t2.ToFileTime() - t1.ToFileTime());
+                                //return 0;
+
+                                //测试加密时间
+                                isTest = true;
+                            }
+
+                            //内容压缩
+                            else if (temp == "CC" || temp == "contentCompression")
+                            {
+                                var file = new FileInfo(args[i + 1]);
+                                if (file.Exists)
+                                {
+                                    using (var fs = file.OpenRead())
+                                    {
+                                        var allvalue = new byte[file.Length];
+                                        fs.Read(allvalue, 0, allvalue.Length);
+                                        allvalue = Item.Compress(allvalue, CompressMode.Deflate);
+                                        Console.WriteLine(allvalue.ToString(true));
+                                    }
+                                }
+                                return 0;
+                            }
+#endif
+                            //工作模式
+                            else if (temp == "FTB" || temp == "fileToBmp")
+                            {
+                                if (project == Project.Project.NoInput)
+                                {
+                                    project = Project.Project.FileToBmp;
+                                }
+                                else
+                                {
+                                    MessageBox.Show("不能多次设定工作模式!", "错误", MessageBoxButtons.OK);
+                                    return 404;
+                                }
+                            }
+                            else if (temp == "BTF" || temp == "bmpToFile")
+                            {
+                                if (project == Project.Project.NoInput)
+                                {
+                                    project = Project.Project.BmpToFile;
+                                }
+                                else
+                                {
+                                    MessageBox.Show("不能多次设定工作模式!", "错误", MessageBoxButtons.OK);
+                                    return 404;
+                                }
+                            }
+                            else if (temp == "FTBW" || temp == "fileToBmpWait")
+                            {
+                                if (project == Project.Project.NoInput)
+                                {
                                     project = Project.Project.FileToBmpWait;
-                                    break;
-                                case Project.Project.BmpToFile:
+                                }
+                                else
+                                {
+                                    MessageBox.Show("不能多次设定工作模式!", "错误", MessageBoxButtons.OK);
+                                    return 404;
+                                }
+                            }
+                            else if (temp == "BTFW" || temp == "bmpToFileWait")
+                            {
+                                if (project == Project.Project.NoInput)
+                                {
                                     project = Project.Project.BmpToFileWait;
-                                    break;
-                                default:
-                                    break;
+                                }
+                                else
+                                {
+                                    MessageBox.Show("不能多次设定工作模式!", "错误", MessageBoxButtons.OK);
+                                    return 404;
+                                }
+                            }
+                            //输入文件路径
+                            else if (temp == "IP" || temp == "inputPath" || temp == "inputpath")
+                            {
+                                inputpath = args[i + 1];
+                            }
+                            //输出文件路径
+                            else if (temp == "OP" || temp == "outPath" || temp == "outpath")
+                            {
+                                outpath = args[i + 1];
+                            }
+                            //是否需要密码
+                            else if (temp == "NK" || temp == "needKey" || temp == "needkey")
+                            {
+                                needkey = true;
+                            }
+                            //加密模式
+                            else if (temp == "KM" || temp == "keyMode" || temp == "keymode")
+                            {
+                                keyMode = CodingMode.NoCoding.Pause(args[i + 1]);
+                            }
+                            //输入密码
+                            else if (temp == "KV" || temp == "keyValue" || temp == "keyvalue")
+                            {
+                                keyValue = args[i + 1];
+                            }
+                            else if (temp == "P" || temp == "password")
+                            {
+                                needkey = true;
+                                keyMode = CodingMode.SHA256;
+                                keyValue = args[i + 1];
+                            }
+                            //压缩模式
+                            else if (temp == "CM" || temp == "compressMode" || temp == "compressmode")
+                            {
+                                try
+                                {
+                                    compressMode = CompressMode.NoCompress.Pause(args[i + 1]);
+                                }
+                                catch (Exception)
+                                {
+                                    compressMode = CompressMode.NoCompress;
+                                    Item.WriteColorLine("压缩模式输入错误!\n已经选择默认压缩模式", ConsoleColor.Red);
+                                }
+                            }
+                            //分块大小
+                            else if (temp == "S" || temp == "size")
+                            {
+                                size = Item.LimitBytes(Item.GetBytes(args[i + 1]));
+#if DEBUG
+                                Console.WriteLine(string.Format("SIZE:{0}", size));
+#endif
+                                switch (project)
+                                {
+                                    case Project.Project.NoInput:
+                                        break;
+                                    case Project.Project.FileToBmp:
+                                        project = Project.Project.FileToBmpWait;
+                                        break;
+                                    case Project.Project.BmpToFile:
+                                        project = Project.Project.BmpToFileWait;
+                                        break;
+                                    default:
+                                        break;
+                                }
                             }
                         }
                     }
-                }
+                }                
 
                 #region 检查缺少的参数
                 //如果缺少工作模式
                 while (project == Project.Project.NoInput)
                 {
                     Item.WriteColorLine("工作模式错误!\n需要重新输入!\n",ConsoleColor.Yellow);
-                    temp = Interaction.InputBox("请输入工作模式!", "提示", "BTF/FTB");
+                    var temp = Interaction.InputBox("请输入工作模式!", "提示", "BTF/FTB");
                     project = Project.Project.NoInput.Pause(temp);
                 }
                 //如果缺少输入文件
@@ -430,7 +601,7 @@ namespace FileToImage
                     case Project.Project.BmpToFileWait:
                         if (string.IsNullOrEmpty(outpath))
                         {
-                            ret = 401;
+                            ret = Item.BmpToFile(inputpath, needkey, keyMode, keyValue, compressMode, null);
                         }
                         else
                         {
@@ -458,6 +629,8 @@ namespace FileToImage
                         Item.WriteColorLine( "解码成功", ConsoleColor.Green); break;
                     case 200:
                         Item.WriteColorLine( "文件已经存在!",ConsoleColor.Yellow); break;
+                    case 201:
+                        Item.WriteColorLine("文件不存在!", ConsoleColor.Yellow); break;
                     case 300:
                         Item.WriteColorLine( "编码方式错误!",ConsoleColor.Red); break;
                     case 3000:
@@ -486,6 +659,8 @@ namespace FileToImage
                         Item.WriteColorLine("不能多次设定运行模式!",ConsoleColor.Red);break;
                     case 405:
                         Item.WriteColorLine("此功能尚未完成!",ConsoleColor.Red);break;
+                    case 406:
+                        Item.WriteColorLine("错误的工作模式!", ConsoleColor.Red);break;
                     default:
                         Item.WriteColorLine( "未知错误!",ConsoleColor.Red); break;
                 }

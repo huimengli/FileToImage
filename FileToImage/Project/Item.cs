@@ -1003,11 +1003,6 @@ namespace FileToImage.Project
         /// <returns></returns>
         public static int BmpToFile(string img, bool checkBox1, CodingMode comboBox1, string textBox1, CompressMode compressMode, string outPath)
         {
-            if (File.Exists(outPath))
-            {
-                return 200;
-            }
-
             using (var imgFile = new FileInfo(img).OpenRead())
             {
                 imgFile.Position = ICONLENGTH;
@@ -1063,6 +1058,18 @@ namespace FileToImage.Project
 
                 var md5s = temp2["MD5"].Split('/');
                 var eachPartSize = temp2["eachPartSize"].Split('/').ToInt();
+                if (outPath == null)
+                {
+                    FileInfo imgInfo = new FileInfo(img);
+                    string fileName = temp2["fileName"];
+                    fileName = Item.Base64Decode(fileName);
+                    outPath = imgInfo.DirectoryName + "\\" + fileName;
+                }
+
+                if (File.Exists(outPath))
+                {
+                    return 200;
+                }
 
                 //开始解密
                 using (var outFile = File.Create(outPath))
@@ -1102,6 +1109,10 @@ namespace FileToImage.Project
                 if (ret>=300)
                 {
                     File.Delete(outPath);
+                }
+                else
+                {
+                    Item.OpenFile(outPath);
                 }
                 return ret;
             }
